@@ -1,0 +1,23 @@
+description = "Spring MY MYBATIS"
+
+apply plugin: "kotlin"
+
+dependencies {
+    compile "mysql:mysql-connector-java:8.0.12"
+    compile "com.alibaba:druid:1.1.8"
+
+    compile "org.mybatis:mybatis:3.5.1-MY"
+    compile "org.mybatis:mybatis-spring:2.0.1-MY"
+
+
+    compile "ognl:ognl:3.2.15"
+    compile "org.javassist:javassist:3.27.0-GA"
+
+    compile(project(":spring-core"))
+    optional(project(":spring-aop"))
+    optional(project(":spring-beans"))
+    optional(project(":spring-context"))
+    optional(project(":spring-jdbc"))
+    optional(project(":spring-orm"))
+    optional(project(":spring-tx"))
+}

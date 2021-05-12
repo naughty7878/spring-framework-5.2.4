@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xmlns:aop="http://www.springframework.org/schema/aop"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd"
+>
+
+	<bean id="customAspect"  class="com.test.aop3.CustomAspect"></bean>
+
+	<bean id="target" class="com.test.aop3.Target"></bean>
+
+	<aop:config>
+		<aop:aspect id="customAspectAOP" ref="customAspect" >
+
+			<aop:pointcut id="customPointCut" expression="execution(* com.test.aop3.Target.*(..))" />
+			<aop:before method="before" pointcut-ref="customPointCut"/>
+			<aop:after-returning method="afterReturning" pointcut-ref="customPointCut"/>
+			<aop:after-throwing method="afterThrowing" pointcut-ref="customPointCut"/>
+			<aop:after method="after" pointcut-ref="customPointCut"/>
+			<aop:around method="around" pointcut-ref="customPointCut"/>
+			<!--
+			参数环绕通知
+			<aop:around method="aroundInit" pointcut="execution(* com.test.aop3.Target.init(String, int)) and args(bizName, times)"/>
+			  -->
+		</aop:aspect>
+
+	</aop:config>
+
+</beans>

@@ -1,0 +1,31 @@
+description = "Spring MY MVC"
+
+apply plugin: "kotlin"
+apply plugin: 'java'
+apply plugin: 'war'
+
+dependencies {
+
+    compile(project(":spring-core"))
+    optional(project(":spring-aop"))
+    optional(project(":spring-beans"))
+    optional(project(":spring-context"))
+    optional(project(":spring-web"))
+    optional(project(":spring-webmvc"))
+    optional(project(":spring-expression"))
+
+    optional(project(":spring-test"))
+
+    optional("javax.servlet:javax.servlet-api")
+    optional("javax.servlet.jsp:javax.servlet.jsp-api")
+
+    optional("javax.activation:javax.activation-api")
+    optional("javax.el:javax.el-api")
+    optional("javax.inject:javax.inject")
+
+    optional("javax.servlet.jsp.jstl:javax.servlet.jsp.jstl-api")
+
+    optional("junit:junit")
+    testCompile("com.fasterxml.jackson.core:jackson-databind")
+    optional("org.hamcrest:hamcrest")
+}

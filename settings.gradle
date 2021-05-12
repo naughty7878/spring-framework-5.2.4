@@ -20,6 +20,9 @@ include "spring-instrument"
 include "spring-jcl"
 include "spring-jdbc"
 include "spring-jms"
+include "spring-my"
+include "spring-my-mvc"
+include "spring-my-mybatis"
 include "spring-messaging"
 include "spring-orm"
 include "spring-oxm"
@@ -32,7 +35,7 @@ include "spring-websocket"
 include "framework-bom"
 include "integration-tests"
 
-rootProject.name = "spring"
+rootProject.name = "spring-framework-5.2.4"
 rootProject.children.each {project ->
 	project.buildFileName = "${project.name}.gradle"
 }
