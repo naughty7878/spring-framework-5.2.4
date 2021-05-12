@@ -279,7 +279,14 @@ configure(allprojects) { project ->
 			cacheChangingModulesFor 0, "seconds"
 		}
 		repositories {
+			// 配置先从本地仓库寻找jar包，优先寻找上一个配置，找到不执行下面的配置
+			// 本地仓库位于USER_HOME/.m2/repository
+			mavenLocal()
+			// aliyun镜像
+			maven { url 'https://maven.aliyun.com/nexus/content/groups/public/'}
+			// Maven的中央仓库
 			mavenCentral()
+			// Spring Maven 仓库
 			maven { url "https://repo.spring.io/libs-spring-framework-build" }
 		}
 	}
