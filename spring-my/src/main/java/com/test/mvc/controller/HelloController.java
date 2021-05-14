@@ -20,7 +20,7 @@ public class HelloController {
 
     @RequestMapping("/map")
     @ResponseBody
-    public Map map(){
+    public Map<String, String> map(){
         Map<String, String> map = new HashMap<>();
         map.put("name", "xiaoming");
         map.put("age", "18");

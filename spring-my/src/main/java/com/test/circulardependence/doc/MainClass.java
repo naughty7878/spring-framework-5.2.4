@@ -37,8 +37,7 @@ public class MainClass {
         otherFunction(callback);*/
     }
 
-    private static void otherFunction(ObjectFactory callback) {
-
+    private static void otherFunction(ObjectFactory<Object> callback) {
         // 进行回调
         callback.getObject();
     }

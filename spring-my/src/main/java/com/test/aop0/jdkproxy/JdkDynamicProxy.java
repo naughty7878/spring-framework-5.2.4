@@ -41,8 +41,8 @@ public class JdkDynamicProxy implements InvocationHandler {
      * @param <T>
      * @return
      */
-    public <T> T getProxy() {
-        return (T) Proxy.newProxyInstance(target.getClass().getClassLoader(),
+    public <T> Object getProxy() {
+        return Proxy.newProxyInstance(target.getClass().getClassLoader(),
                 target.getClass().getInterfaces(),
                 this);
     }

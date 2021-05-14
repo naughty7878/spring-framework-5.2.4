@@ -19,7 +19,7 @@ public class Client2 {
         JdkDynamicProxy2 proxy = new JdkDynamicProxy2(catTarget, headHandler);
 
         // JDK 动态代理是基于接口的，所以只能转换为 Cat 实现的接口 Animal
-        Animal catProxy = proxy.getProxy();
+        Animal catProxy = (Animal) proxy.getProxy();
 
         // 调用代理对象的方法
         catProxy.eat();

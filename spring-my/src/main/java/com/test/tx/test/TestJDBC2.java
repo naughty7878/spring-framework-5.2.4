@@ -50,7 +50,7 @@ public class TestJDBC2 {
 				//5: 发送SQL  返回一个ResultSet
 				boolean result = pre.execute(sql);
 
-				int n = 1/0;
+//				int n = 1/0;
 
 				// 手动提交事务
 				con.commit();

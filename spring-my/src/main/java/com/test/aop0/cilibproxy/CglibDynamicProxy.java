@@ -46,10 +46,10 @@ public class CglibDynamicProxy implements MethodInterceptor {
      * @param <T>
      * @return
      */
-    public <T> T getProxy() {
+    public <T> Object getProxy() {
         Enhancer enhancer = new Enhancer();
         enhancer.setSuperclass(target.getClass());
         enhancer.setCallback(this);
-        return (T) enhancer.create();
+        return enhancer.create();
     }
 }

@@ -9,7 +9,7 @@ public class Client {
         CglibDynamicProxy proxy = new CglibDynamicProxy(target);
 
         // 获取 CGLIB 代理类
-        Service proxyObject = proxy.getProxy();
+        Service proxyObject = (Service) proxy.getProxy();
 
         // 调用代理对象的方法
         proxyObject.finalMethod();

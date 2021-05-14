@@ -38,7 +38,7 @@ public class TestService {
 		TransactionStatus status = txManager.getTransaction(def);
 		try {
 			jdbcTemplate.update("update user_tx set name = '王五' where id = 3");
-			int n = 1/0;
+//			int n = 1/0;
 			// 提交status中绑定的事务
 			txManager.commit(status);
 		} catch (RuntimeException e) {

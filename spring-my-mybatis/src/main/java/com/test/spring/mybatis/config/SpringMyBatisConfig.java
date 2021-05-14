@@ -57,7 +57,7 @@ public class SpringMyBatisConfig {
 		// 设置 SQL 映射文件路径
 		factoryBean.setMapperLocations(new PathMatchingResourcePatternResolver().getResources("classpath:mybatis/mapper/*.xml"));
 		// 这是类型别名
-		factoryBean.setTypeAliases(new Class[]{Employee.class});
+//		factoryBean.setTypeAliases(new Class[]{Employee.class});
 		return factoryBean;
 	}
 }

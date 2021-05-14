@@ -8,7 +8,7 @@ public class MainStarter {
 	public static void main(String[] args) {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(MainConfig.class);
 
-		Person person = (Person) context.getBean(Person.class);
+		Person person = context.getBean(Person.class);
 		System.out.println(person);
 //		System.out.println(context.getBean("mainConfig"));
 //		System.out.println(context.getBean(Student.class));

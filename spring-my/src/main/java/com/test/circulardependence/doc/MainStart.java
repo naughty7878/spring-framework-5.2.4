@@ -54,7 +54,7 @@ public class MainStart {
     public static Map<String,Object> earlySingletonObjects=new ConcurrentHashMap<>();
 
     // 三级缓存
-    public static Map<String,ObjectFactory> singletonFactories=new ConcurrentHashMap<>();
+    public static Map<String,ObjectFactory<Object>> singletonFactories=new ConcurrentHashMap<>();
 
     // 循环依赖标识
     public  static  Set<String> singletonsCurrennlyInCreation=new HashSet<>();
@@ -134,7 +134,7 @@ public class MainStart {
             // 如果二级缓存没有就从三级缓存中拿
             if(bean==null) {
                 // 从三级缓存中拿
-                ObjectFactory factory = singletonFactories.get(beanName);
+                ObjectFactory<Object> factory = singletonFactories.get(beanName);
                 if (factory != null) {
                     bean=factory.getObject(); // 拿到动态代理
                     earlySingletonObjects.put(beanName, bean);
