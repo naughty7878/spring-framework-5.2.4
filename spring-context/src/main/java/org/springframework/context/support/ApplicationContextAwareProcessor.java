@@ -75,6 +75,7 @@ class ApplicationContextAwareProcessor implements BeanPostProcessor {
 	}
 
 
+	// 初始化前调用 此Bean后置处理器处理
 	@Override
 	@Nullable
 	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
@@ -86,24 +87,29 @@ class ApplicationContextAwareProcessor implements BeanPostProcessor {
 
 		AccessControlContext acc = null;
 
+		// 获取系统安全管理器，默认获取为空
 		if (System.getSecurityManager() != null) {
 			acc = this.applicationContext.getBeanFactory().getAccessControlContext();
 		}
 
 		if (acc != null) {
 			AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+				// 调用Aware接口
 				invokeAwareInterfaces(bean);
 				return null;
 			}, acc);
 		}
 		else {
+			// 调用Aware接口
 			invokeAwareInterfaces(bean);
 		}
 
 		return bean;
 	}
 
+	// 调用Aware接口
 	private void invokeAwareInterfaces(Object bean) {
+		// 判断 bean 属于那种类型，调用对应的方法
 		if (bean instanceof EnvironmentAware) {
 			((EnvironmentAware) bean).setEnvironment(this.applicationContext.getEnvironment());
 		}

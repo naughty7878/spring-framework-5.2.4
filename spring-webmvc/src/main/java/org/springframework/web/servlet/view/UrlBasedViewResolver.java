@@ -473,6 +473,7 @@ public class UrlBasedViewResolver extends AbstractCachingViewResolver implements
 		}
 
 		// Check for special "redirect:" prefix.
+		// 重定向视图名
 		if (viewName.startsWith(REDIRECT_URL_PREFIX)) {
 			String redirectUrl = viewName.substring(REDIRECT_URL_PREFIX.length());
 			RedirectView view = new RedirectView(redirectUrl,
@@ -485,6 +486,7 @@ public class UrlBasedViewResolver extends AbstractCachingViewResolver implements
 		}
 
 		// Check for special "forward:" prefix.
+		// 转发视图名
 		if (viewName.startsWith(FORWARD_URL_PREFIX)) {
 			String forwardUrl = viewName.substring(FORWARD_URL_PREFIX.length());
 			InternalResourceView view = new InternalResourceView(forwardUrl);
@@ -492,6 +494,7 @@ public class UrlBasedViewResolver extends AbstractCachingViewResolver implements
 		}
 
 		// Else fall back to superclass implementation: calling loadView.
+		// 父类创建视图
 		return super.createView(viewName, locale);
 	}
 
@@ -527,8 +530,11 @@ public class UrlBasedViewResolver extends AbstractCachingViewResolver implements
 	 */
 	@Override
 	protected View loadView(String viewName, Locale locale) throws Exception {
+		// 构建视图
 		AbstractUrlBasedView view = buildView(viewName);
+		// 支持生命周期方法，对视图前置处理、后置处理等
 		View result = applyLifecycleMethods(viewName, view);
+		// 返回
 		return (view.checkResource(locale) ? result : null);
 	}
 
@@ -547,11 +553,14 @@ public class UrlBasedViewResolver extends AbstractCachingViewResolver implements
 	 * @see #loadView(String, java.util.Locale)
 	 */
 	protected AbstractUrlBasedView buildView(String viewName) throws Exception {
+		// org.springframework.web.servlet.view.JstlView
 		Class<?> viewClass = getViewClass();
 		Assert.state(viewClass != null, "No view class");
-
+		// 实例化视图类
 		AbstractUrlBasedView view = (AbstractUrlBasedView) BeanUtils.instantiateClass(viewClass);
+		// 前缀 + 视图名 + 后缀
 		view.setUrl(getPrefix() + viewName + getSuffix());
+		// 属性Map
 		view.setAttributesMap(getAttributesMap());
 
 		String contentType = getContentType();
@@ -576,7 +585,7 @@ public class UrlBasedViewResolver extends AbstractCachingViewResolver implements
 		if (exposedContextBeanNames != null) {
 			view.setExposedContextBeanNames(exposedContextBeanNames);
 		}
-
+		// 返回
 		return view;
 	}
 

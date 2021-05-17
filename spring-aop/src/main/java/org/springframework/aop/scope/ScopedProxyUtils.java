@@ -129,6 +129,8 @@ public abstract class ScopedProxyUtils {
 	 * @since 4.1.4
 	 */
 	public static boolean isScopedTarget(@Nullable String beanName) {
+		// TARGET_NAME_PREFIX = "scopedTarget."
+		// 是否是范围内的目标，即beanName以  "scopedTarget."  开头
 		return (beanName != null && beanName.startsWith(TARGET_NAME_PREFIX));
 	}
 

@@ -310,9 +310,11 @@ public abstract class AbstractView extends WebApplicationObjectSupport implement
 					", model " + (model != null ? model : Collections.emptyMap()) +
 					(this.staticAttributes.isEmpty() ? "" : ", static attributes " + this.staticAttributes));
 		}
-
+		// 创建合并输出模型
 		Map<String, Object> mergedModel = createMergedOutputModel(model, request, response);
+		// 准备响应
 		prepareResponse(request, response);
+		// 渲染合并输出模型
 		renderMergedOutputModel(mergedModel, getRequestToExpose(request), response);
 	}
 
@@ -324,6 +326,13 @@ public abstract class AbstractView extends WebApplicationObjectSupport implement
 			HttpServletRequest request, HttpServletResponse response) {
 
 		@SuppressWarnings("unchecked")
+		// 路径参数集合
+		/**
+		 * @RequestMapping("/user/{id}")
+		 * public String test(@PathVariable("id") Integer id){
+		 * }
+		 * // ===> id = 1
+		 */
 		Map<String, Object> pathVars = (this.exposePathVariables ?
 				(Map<String, Object>) request.getAttribute(View.PATH_VARIABLES) : null);
 
@@ -332,12 +341,16 @@ public abstract class AbstractView extends WebApplicationObjectSupport implement
 		size += (model != null ? model.size() : 0);
 		size += (pathVars != null ? pathVars.size() : 0);
 
+
+		// 创建集合
 		Map<String, Object> mergedModel = new LinkedHashMap<>(size);
+		// 合并模型集合中 加入静态属性
 		mergedModel.putAll(this.staticAttributes);
 		if (pathVars != null) {
 			mergedModel.putAll(pathVars);
 		}
 		if (model != null) {
+			// 合并模型集合中 加入原模型数据
 			mergedModel.putAll(model);
 		}
 
@@ -345,7 +358,7 @@ public abstract class AbstractView extends WebApplicationObjectSupport implement
 		if (this.requestContextAttribute != null) {
 			mergedModel.put(this.requestContextAttribute, createRequestContext(request, response, mergedModel));
 		}
-
+		// 返回
 		return mergedModel;
 	}
 

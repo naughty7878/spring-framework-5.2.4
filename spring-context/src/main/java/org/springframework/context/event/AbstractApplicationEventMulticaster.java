@@ -63,13 +63,18 @@ import org.springframework.util.ObjectUtils;
 public abstract class AbstractApplicationEventMulticaster
 		implements ApplicationEventMulticaster, BeanClassLoaderAware, BeanFactoryAware {
 
+	// 默认监听器收集者
 	private final ListenerRetriever defaultRetriever = new ListenerRetriever(false);
 
+	// 缓存：key 与 监听器收集者 缓存
+	// 存放的key是eventType+sourceType组合的，存放value是key对应的监听器集合
 	final Map<ListenerCacheKey, ListenerRetriever> retrieverCache = new ConcurrentHashMap<>(64);
 
+	// 类加载器
 	@Nullable
 	private ClassLoader beanClassLoader;
 
+	// bean工厂
 	@Nullable
 	private ConfigurableBeanFactory beanFactory;
 
@@ -107,11 +112,14 @@ public abstract class AbstractApplicationEventMulticaster
 		synchronized (this.retrievalMutex) {
 			// Explicitly remove target for a proxy, if registered already,
 			// in order to avoid double invocations of the same listener.
+			// 获取单例目标
 			Object singletonTarget = AopProxyUtils.getSingletonTarget(listener);
 			if (singletonTarget instanceof ApplicationListener) {
 				this.defaultRetriever.applicationListeners.remove(singletonTarget);
 			}
+			// 添加到事件广播器中的默认回收器中的 监听器bean集合中
 			this.defaultRetriever.applicationListeners.add(listener);
+			// 清空收集者缓存
 			this.retrieverCache.clear();
 		}
 	}
@@ -119,6 +127,7 @@ public abstract class AbstractApplicationEventMulticaster
 	@Override
 	public void addApplicationListenerBean(String listenerBeanName) {
 		synchronized (this.retrievalMutex) {
+			// 将监听器的名字添加到广播器中的applicationListenerBeans集合中
 			this.defaultRetriever.applicationListenerBeans.add(listenerBeanName);
 			this.retrieverCache.clear();
 		}
@@ -173,11 +182,16 @@ public abstract class AbstractApplicationEventMulticaster
 	protected Collection<ApplicationListener<?>> getApplicationListeners(
 			ApplicationEvent event, ResolvableType eventType) {
 
+		// 获取事件源
 		Object source = event.getSource();
+		// 事件源类clazz
 		Class<?> sourceType = (source != null ? source.getClass() : null);
+		// 根据事件类型与事件源类型，创建一个监听器缓存key
 		ListenerCacheKey cacheKey = new ListenerCacheKey(eventType, sourceType);
 
 		// Quick check for existing entry on ConcurrentHashMap...
+		// 从缓存中去监听器
+		// retrieverCache： 存放的key是eventType+sourceType组合的，存放value是key对应的监听器集合
 		ListenerRetriever retriever = this.retrieverCache.get(cacheKey);
 		if (retriever != null) {
 			return retriever.getApplicationListeners();
@@ -193,9 +207,12 @@ public abstract class AbstractApplicationEventMulticaster
 					return retriever.getApplicationListeners();
 				}
 				retriever = new ListenerRetriever(true);
+				// 根据事件类型、事件源类型，搜寻监听器集合
 				Collection<ApplicationListener<?>> listeners =
 						retrieveApplicationListeners(eventType, sourceType, retriever);
+				// 将监听器收集者，放到缓存中
 				this.retrieverCache.put(cacheKey, retriever);
+				// 返回监听器
 				return listeners;
 			}
 		}
@@ -212,24 +229,33 @@ public abstract class AbstractApplicationEventMulticaster
 	 * @param retriever the ListenerRetriever, if supposed to populate one (for caching purposes)
 	 * @return the pre-filtered list of application listeners for the given event and source type
 	 */
+	// 搜寻监听器
 	private Collection<ApplicationListener<?>> retrieveApplicationListeners(
 			ResolvableType eventType, @Nullable Class<?> sourceType, @Nullable ListenerRetriever retriever) {
 
+		// 所有监听器集合
 		List<ApplicationListener<?>> allListeners = new ArrayList<>();
+		// 监听器Set集合
 		Set<ApplicationListener<?>> listeners;
+		// 监听器名单
 		Set<String> listenerBeans;
 		synchronized (this.retrievalMutex) {
+			// 将默认收集器中的监听器，添加到集合中（this.defaultRetriever.applicationListeners来源于bean创建时，后置处理器添加）
 			listeners = new LinkedHashSet<>(this.defaultRetriever.applicationListeners);
+			//  将默认收集器中的监听器名单，添加到集合中（this.defaultRetriever.applicationListenerBeans来源于reflush方法中注册监听器时，添加到事件广播器中的）
 			listenerBeans = new LinkedHashSet<>(this.defaultRetriever.applicationListenerBeans);
 		}
 
 		// Add programmatically registered listeners, including ones coming
 		// from ApplicationListenerDetector (singleton beans and inner beans).
 		for (ApplicationListener<?> listener : listeners) {
+			// 判断监听器是否支持事件类型，事件源类型
 			if (supportsEvent(listener, eventType, sourceType)) {
 				if (retriever != null) {
+					// 添加到retriever中
 					retriever.applicationListeners.add(listener);
 				}
+				// 添加到集合中
 				allListeners.add(listener);
 			}
 		}
@@ -238,20 +264,26 @@ public abstract class AbstractApplicationEventMulticaster
 		// registered listeners above - but here potentially with additional metadata.
 		if (!listenerBeans.isEmpty()) {
 			ConfigurableBeanFactory beanFactory = getBeanFactory();
+			// 遍历监听器名单
 			for (String listenerBeanName : listenerBeans) {
 				try {
+					// 根据bean工厂、监听器名称、事件类型，判断是否符合条件
 					if (supportsEvent(beanFactory, listenerBeanName, eventType)) {
+						// 获取符合条件的监听器
 						ApplicationListener<?> listener =
 								beanFactory.getBean(listenerBeanName, ApplicationListener.class);
 						if (!allListeners.contains(listener) && supportsEvent(listener, eventType, sourceType)) {
 							if (retriever != null) {
 								if (beanFactory.isSingleton(listenerBeanName)) {
+									// 添加到retriever中
 									retriever.applicationListeners.add(listener);
 								}
 								else {
+									// 添加到retriever中
 									retriever.applicationListenerBeans.add(listenerBeanName);
 								}
 							}
+							// 添加到集合中
 							allListeners.add(listener);
 						}
 					}
@@ -272,10 +304,11 @@ public abstract class AbstractApplicationEventMulticaster
 				}
 			}
 		}
-
+		// 对监听器进行排序
 		AnnotationAwareOrderComparator.sort(allListeners);
 		if (retriever != null && retriever.applicationListenerBeans.isEmpty()) {
 			retriever.applicationListeners.clear();
+			// 添加
 			retriever.applicationListeners.addAll(allListeners);
 		}
 		return allListeners;
@@ -350,6 +383,8 @@ public abstract class AbstractApplicationEventMulticaster
 
 		GenericApplicationListener smartListener = (listener instanceof GenericApplicationListener ?
 				(GenericApplicationListener) listener : new GenericApplicationListenerAdapter(listener));
+		// supportsEventType 是否支持事件类型
+		// supportsSourceType 是否支持事件源类型
 		return (smartListener.supportsEventType(eventType) && smartListener.supportsSourceType(sourceType));
 	}
 
@@ -359,8 +394,10 @@ public abstract class AbstractApplicationEventMulticaster
 	 */
 	private static final class ListenerCacheKey implements Comparable<ListenerCacheKey> {
 
+		// 事件类型
 		private final ResolvableType eventType;
 
+		// 事件源类型
 		@Nullable
 		private final Class<?> sourceType;
 
@@ -417,8 +454,10 @@ public abstract class AbstractApplicationEventMulticaster
 	 */
 	private class ListenerRetriever {
 
+		// 监听器bean集合
 		public final Set<ApplicationListener<?>> applicationListeners = new LinkedHashSet<>();
 
+		// 监听器bean的名称集合
 		public final Set<String> applicationListenerBeans = new LinkedHashSet<>();
 
 		private final boolean preFiltered;

@@ -139,12 +139,14 @@ public class InternalResourceView extends AbstractUrlBasedView {
 			Map<String, Object> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
 
 		// Expose the model object as request attributes.
+		// 将模型数据作为reqeust属性
 		exposeModelAsRequestAttributes(model, request);
 
 		// Expose helpers as request attributes, if any.
 		exposeHelpers(request);
 
 		// Determine the path for the request dispatcher.
+		// 获取请求调度者
 		String dispatcherPath = prepareForRendering(request, response);
 
 		// Obtain a RequestDispatcher for the target resource (typically a JSP).
@@ -168,6 +170,10 @@ public class InternalResourceView extends AbstractUrlBasedView {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Forwarding to [" + getUrl() + "]");
 			}
+			// 请求调度者转发request
+			/**
+			 * 模型视图响应，请求调度者经过一系列处理，再次创建过滤器执行立链，对reques他进行过滤
+			 */
 			rd.forward(request, response);
 		}
 	}

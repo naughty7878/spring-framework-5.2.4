@@ -50,8 +50,10 @@ public class DefaultEventListenerFactory implements EventListenerFactory, Ordere
 		return true;
 	}
 
+	// 创建一个应用监听器
 	@Override
 	public ApplicationListener<?> createApplicationListener(String beanName, Class<?> type, Method method) {
+		// 创建一个应用方法适配监听器
 		return new ApplicationListenerMethodAdapter(beanName, type, method);
 	}
 

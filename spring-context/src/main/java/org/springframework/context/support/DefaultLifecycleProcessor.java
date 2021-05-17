@@ -113,19 +113,25 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 	 */
 	@Override
 	public void stop() {
+		// 停止生命周期beans
 		stopBeans();
+		// 状态设为false
 		this.running = false;
 	}
 
 	@Override
 	public void onRefresh() {
+		// 启动生命周期的Beans
 		startBeans(true);
+		// 设置自己running为true
 		this.running = true;
 	}
 
 	@Override
 	public void onClose() {
+		// 停止生命周期beans
 		stopBeans();
+		// 状态设为false
 		this.running = false;
 	}
 
@@ -138,23 +144,33 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 	// Internal helpers
 
 	private void startBeans(boolean autoStartupOnly) {
+		// 获取生命周期Beans
 		Map<String, Lifecycle> lifecycleBeans = getLifecycleBeans();
 		Map<Integer, LifecycleGroup> phases = new HashMap<>();
 		lifecycleBeans.forEach((beanName, bean) -> {
+			// isAutoStartup 是否自动开启
 			if (!autoStartupOnly || (bean instanceof SmartLifecycle && ((SmartLifecycle) bean).isAutoStartup())) {
+				// 获得Bean的阶级
 				int phase = getPhase(bean);
+				// 根据阶级，获取对应生命周期组
 				LifecycleGroup group = phases.get(phase);
 				if (group == null) {
+					// 创建生命周期组，autoStartupOnly：自动启动标识
 					group = new LifecycleGroup(phase, this.timeoutPerShutdownPhase, lifecycleBeans, autoStartupOnly);
+					// 添加到生命周期处理器的阶级属性中
 					phases.put(phase, group);
 				}
+				// 将bean添加到组中
 				group.add(beanName, bean);
 			}
 		});
+		// 如果生命周期处理器的阶级属性不为空
 		if (!phases.isEmpty()) {
 			List<Integer> keys = new ArrayList<>(phases.keySet());
+			// 排序
 			Collections.sort(keys);
 			for (Integer key : keys) {
+				// 获得生命周期组，调用组的start()方法
 				phases.get(key).start();
 			}
 		}
@@ -173,12 +189,14 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 			for (String dependency : dependenciesForBean) {
 				doStart(lifecycleBeans, dependency, autoStartupOnly);
 			}
+			// 判断生命周期bean是否启动
 			if (!bean.isRunning() &&
 					(!autoStartupOnly || !(bean instanceof SmartLifecycle) || ((SmartLifecycle) bean).isAutoStartup())) {
 				if (logger.isTraceEnabled()) {
 					logger.trace("Starting bean '" + beanName + "' of type [" + bean.getClass().getName() + "]");
 				}
 				try {
+					// 调用bean的启动方法
 					bean.start();
 				}
 				catch (Throwable ex) {
@@ -192,6 +210,7 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 	}
 
 	private void stopBeans() {
+		// 获取生命周期beans
 		Map<String, Lifecycle> lifecycleBeans = getLifecycleBeans();
 		Map<Integer, LifecycleGroup> phases = new HashMap<>();
 		lifecycleBeans.forEach((beanName, bean) -> {
@@ -199,14 +218,17 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 			LifecycleGroup group = phases.get(shutdownPhase);
 			if (group == null) {
 				group = new LifecycleGroup(shutdownPhase, this.timeoutPerShutdownPhase, lifecycleBeans, false);
+				// 添加到生命周期处理器阶级属性中
 				phases.put(shutdownPhase, group);
 			}
 			group.add(beanName, bean);
 		});
 		if (!phases.isEmpty()) {
 			List<Integer> keys = new ArrayList<>(phases.keySet());
+			// 反排序
 			keys.sort(Collections.reverseOrder());
 			for (Integer key : keys) {
+				// 调用生命周期组的stop()方法
 				phases.get(key).stop();
 			}
 		}
@@ -235,7 +257,9 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 									bean.getClass().getName() + "] to stop");
 						}
 						countDownBeanNames.add(beanName);
+						// 调用bean的stop方法，这里的实现可能是多线程处理
 						((SmartLifecycle) bean).stop(() -> {
+							// 倒计时锁-1
 							latch.countDown();
 							countDownBeanNames.remove(beanName);
 							if (logger.isDebugEnabled()) {
@@ -248,6 +272,7 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 							logger.trace("Stopping bean '" + beanName + "' of type [" +
 									bean.getClass().getName() + "]");
 						}
+						// 调用bean的stop方法
 						bean.stop();
 						if (logger.isDebugEnabled()) {
 							logger.debug("Successfully stopped bean '" + beanName + "'");
@@ -256,6 +281,7 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 				}
 				else if (bean instanceof SmartLifecycle) {
 					// Don't wait for beans that aren't running...
+					// 倒计时锁-1
 					latch.countDown();
 				}
 			}
@@ -275,6 +301,7 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 	 * as well as all SmartLifecycle beans (even if they are marked as lazy-init).
 	 * @return the Map of applicable beans, with bean names as keys and bean instances as values
 	 */
+	// 从Bean工厂中，获取生命周期Beans并返回
 	protected Map<String, Lifecycle> getLifecycleBeans() {
 		ConfigurableListableBeanFactory beanFactory = getBeanFactory();
 		Map<String, Lifecycle> beans = new LinkedHashMap<>();
@@ -287,6 +314,7 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 					(!isFactoryBean || matchesBeanType(Lifecycle.class, beanNameToCheck, beanFactory))) ||
 					matchesBeanType(SmartLifecycle.class, beanNameToCheck, beanFactory)) {
 				Object bean = beanFactory.getBean(beanNameToCheck);
+				// 判断条件
 				if (bean != this && bean instanceof Lifecycle) {
 					beans.put(beanNameToRegister, (Lifecycle) bean);
 				}
@@ -325,9 +353,9 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 		private final long timeout;
 
 		private final Map<String, ? extends Lifecycle> lifecycleBeans;
-
+		// 自动启动标识
 		private final boolean autoStartupOnly;
-
+		// 成员集合，装载生命周期组成员对象
 		private final List<LifecycleGroupMember> members = new ArrayList<>();
 
 		private int smartMemberCount;
@@ -341,6 +369,7 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 			this.autoStartupOnly = autoStartupOnly;
 		}
 
+		// 添加到生命周期组中
 		public void add(String name, Lifecycle bean) {
 			this.members.add(new LifecycleGroupMember(name, bean));
 			if (bean instanceof SmartLifecycle) {
@@ -348,6 +377,7 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 			}
 		}
 
+		// 启动
 		public void start() {
 			if (this.members.isEmpty()) {
 				return;
@@ -355,8 +385,11 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 			if (logger.isDebugEnabled()) {
 				logger.debug("Starting beans in phase " + this.phase);
 			}
+			// 对成员继续排序
 			Collections.sort(this.members);
+			// 遍历
 			for (LifecycleGroupMember member : this.members) {
+				// 去启动
 				doStart(this.lifecycleBeans, member.name, this.autoStartupOnly);
 			}
 		}
@@ -368,12 +401,18 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 			if (logger.isDebugEnabled()) {
 				logger.debug("Stopping beans in phase " + this.phase);
 			}
+			// 反排序
 			this.members.sort(Collections.reverseOrder());
+			// 倒计时锁，智能成员计数
 			CountDownLatch latch = new CountDownLatch(this.smartMemberCount);
+			// 获取线程安全的Set集合
 			Set<String> countDownBeanNames = Collections.synchronizedSet(new LinkedHashSet<>());
 			Set<String> lifecycleBeanNames = new HashSet<>(this.lifecycleBeans.keySet());
+			// 遍历
 			for (LifecycleGroupMember member : this.members) {
+				//
 				if (lifecycleBeanNames.contains(member.name)) {
+					// 去停止
 					doStop(this.lifecycleBeans, member.name, latch, countDownBeanNames);
 				}
 				else if (member.bean instanceof SmartLifecycle) {

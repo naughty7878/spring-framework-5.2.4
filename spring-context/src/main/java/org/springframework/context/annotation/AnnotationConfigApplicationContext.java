@@ -53,17 +53,26 @@ import org.springframework.util.Assert;
  */
 public class AnnotationConfigApplicationContext extends GenericApplicationContext implements AnnotationConfigRegistry {
 
+	// 注解bean定义读取器，主要作用是用来读取被注解的了bean
 	private final AnnotatedBeanDefinitionReader reader;
 
+	// 扫描器，它仅仅是在我们外部手动调用 .scan 等方法才有用，常规方式是不会用到scanner对象的
 	private final ClassPathBeanDefinitionScanner scanner;
 
 
 	/**
+	 * 注解配置引用上下文 构造方法
 	 * Create a new AnnotationConfigApplicationContext that needs to be populated
 	 * through {@link #register} calls and then manually {@linkplain #refresh refreshed}.
 	 */
 	public AnnotationConfigApplicationContext() {
+		/**
+		 * 初始化注解模式下的bean定义的读取器
+		 */
 		this.reader = new AnnotatedBeanDefinitionReader(this);
+		/**
+		 * 初始化我们的classPath下的bean定义扫描器
+		 */
 		this.scanner = new ClassPathBeanDefinitionScanner(this);
 	}
 
@@ -84,8 +93,18 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * {@link Configuration @Configuration} classes
 	 */
 	public AnnotationConfigApplicationContext(Class<?>... componentClasses) {
+
+		//会隐式调用父类的构造方法，初始化DefaultListableBeanFactory
+
+		// 调用构造函数，默认先调用父类的无参构造函数
 		this();
+
+		// 注册我们定义的配置类
 		register(componentClasses);
+
+		// refresh()是一个模板方法，规定了IOC容器的启动流程，有些逻辑要交给其子类去实现。
+		// 它对Bean配置资源进行载入ClassPathXmlApplicationContext通过
+		// 调用其父类AbstractApplicationContext的refresh()函数启动整个IOC容器对Bean定义的载入过程
 		refresh();
 	}
 
@@ -156,9 +175,12 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * @see #scan(String...)
 	 * @see #refresh()
 	 */
+	// 根据componentClasses组件类，注册相关组件
 	@Override
 	public void register(Class<?>... componentClasses) {
 		Assert.notEmpty(componentClasses, "At least one component class must be specified");
+		// reader是bean定义的读取器
+		// 注册componentClasses组件类
 		this.reader.register(componentClasses);
 	}
 

@@ -52,6 +52,7 @@ abstract class ParserStrategyUtils {
 	 * @since 5.2
 	 */
 	@SuppressWarnings("unchecked")
+	// 实例化类
 	static <T> T instantiateClass(Class<?> clazz, Class<T> assignableTo, Environment environment,
 			ResourceLoader resourceLoader, BeanDefinitionRegistry registry) {
 
@@ -62,27 +63,36 @@ abstract class ParserStrategyUtils {
 		}
 		ClassLoader classLoader = (registry instanceof ConfigurableBeanFactory ?
 				((ConfigurableBeanFactory) registry).getBeanClassLoader() : resourceLoader.getClassLoader());
+		// 反射创建对象
 		T instance = (T) createInstance(clazz, environment, resourceLoader, registry, classLoader);
+		// 调用感知接口的方法
 		ParserStrategyUtils.invokeAwareMethods(instance, environment, resourceLoader, registry, classLoader);
 		return instance;
 	}
 
+	// 创建实例
 	private static Object createInstance(Class<?> clazz, Environment environment,
 			ResourceLoader resourceLoader, BeanDefinitionRegistry registry,
 			@Nullable ClassLoader classLoader) {
 
+		// 反射获取构造器集合
 		Constructor<?>[] constructors = clazz.getDeclaredConstructors();
+		// 构造器只有1个，且有参数
 		if (constructors.length == 1 && constructors[0].getParameterCount() > 0) {
 			try {
+				// 获取构造器
 				Constructor<?> constructor = constructors[0];
+				// 解析参数
 				Object[] args = resolveArgs(constructor.getParameterTypes(),
 						environment, resourceLoader, registry, classLoader);
+				// 实例化创建对象
 				return BeanUtils.instantiateClass(constructor, args);
 			}
 			catch (Exception ex) {
 				throw new BeanInstantiationException(clazz, "No suitable constructor found", ex);
 			}
 		}
+		// 实例化创建对象
 		return BeanUtils.instantiateClass(clazz);
 	}
 
@@ -118,19 +128,25 @@ abstract class ParserStrategyUtils {
 		throw new IllegalStateException("Illegal method parameter type: " + parameterType.getName());
 	}
 
+	// 调用感知接口的方法
 	private static void invokeAwareMethods(Object parserStrategyBean, Environment environment,
 			ResourceLoader resourceLoader, BeanDefinitionRegistry registry, @Nullable ClassLoader classLoader) {
-
+		// 判断是实现 Aware 接口的对象
 		if (parserStrategyBean instanceof Aware) {
+			// 判断实现类对应类型，并调用对应方法
+			// BeanClassLoaderAware接口
 			if (parserStrategyBean instanceof BeanClassLoaderAware && classLoader != null) {
 				((BeanClassLoaderAware) parserStrategyBean).setBeanClassLoader(classLoader);
 			}
+			// BeanFactoryAware接口
 			if (parserStrategyBean instanceof BeanFactoryAware && registry instanceof BeanFactory) {
 				((BeanFactoryAware) parserStrategyBean).setBeanFactory((BeanFactory) registry);
 			}
+			// EnvironmentAware接口
 			if (parserStrategyBean instanceof EnvironmentAware) {
 				((EnvironmentAware) parserStrategyBean).setEnvironment(environment);
 			}
+			// ResourceLoaderAware接口
 			if (parserStrategyBean instanceof ResourceLoaderAware) {
 				((ResourceLoaderAware) parserStrategyBean).setResourceLoader(resourceLoader);
 			}

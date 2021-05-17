@@ -33,7 +33,7 @@ final class TrueMethodMatcher implements MethodMatcher, Serializable {
 	/**
 	 * Enforce Singleton pattern.
 	 */
-	private TrueMethodMatcher() {
+	private  TrueMethodMatcher() {
 	}
 
 

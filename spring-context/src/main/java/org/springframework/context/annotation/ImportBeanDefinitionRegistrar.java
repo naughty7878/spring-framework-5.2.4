@@ -82,7 +82,7 @@ public interface ImportBeanDefinitionRegistrar {
 	 */
 	default void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry,
 			BeanNameGenerator importBeanNameGenerator) {
-
+		// 注册bean定义
 		registerBeanDefinitions(importingClassMetadata, registry);
 	}
 

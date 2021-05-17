@@ -40,7 +40,7 @@ public class GenericApplicationListenerAdapter implements GenericApplicationList
 
 	private static final Map<Class<?>, ResolvableType> eventTypeCache = new ConcurrentReferenceHashMap<>();
 
-
+	// 委派监听器
 	private final ApplicationListener<ApplicationEvent> delegate;
 
 	@Nullable
@@ -58,12 +58,14 @@ public class GenericApplicationListenerAdapter implements GenericApplicationList
 		this.declaredEventType = resolveDeclaredEventType(this.delegate);
 	}
 
-
+	// 事件处理
 	@Override
 	public void onApplicationEvent(ApplicationEvent event) {
+		// 交由委派监听器处理
 		this.delegate.onApplicationEvent(event);
 	}
 
+	// 是否支持事件类型
 	@Override
 	@SuppressWarnings("unchecked")
 	public boolean supportsEventType(ResolvableType eventType) {

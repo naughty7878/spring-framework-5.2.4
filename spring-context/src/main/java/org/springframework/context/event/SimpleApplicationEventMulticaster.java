@@ -48,9 +48,11 @@ import org.springframework.util.ErrorHandler;
  */
 public class SimpleApplicationEventMulticaster extends AbstractApplicationEventMulticaster {
 
+	// 任务执行器
 	@Nullable
 	private Executor taskExecutor;
 
+	// 错误处理器
 	@Nullable
 	private ErrorHandler errorHandler;
 
@@ -127,14 +129,23 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 		multicastEvent(event, resolveDefaultEventType(event));
 	}
 
+	/**
+	 * 广播事件
+	 * @param event the event to multicast
+	 * @param eventType the type of event (can be {@code null})
+	 */
 	@Override
 	public void multicastEvent(final ApplicationEvent event, @Nullable ResolvableType eventType) {
 		ResolvableType type = (eventType != null ? eventType : resolveDefaultEventType(event));
+		// 1、返回此广播器的当前任务执行器
 		Executor executor = getTaskExecutor();
+		// 2、、getApplicationListeners:返回与给定事件类型匹配的应用监听器集合
 		for (ApplicationListener<?> listener : getApplicationListeners(event, type)) {
+			// 3.1 executor不为null，则使用executor调用监听器
 			if (executor != null) {
 				executor.execute(() -> invokeListener(listener, event));
 			}
+			// 3.2 否则，直接调用监听器
 			else {
 				invokeListener(listener, event);
 			}
@@ -152,9 +163,11 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 	 * @since 4.1
 	 */
 	protected void invokeListener(ApplicationListener<?> listener, ApplicationEvent event) {
+		// 1.返回此广播器的当前错误处理器
 		ErrorHandler errorHandler = getErrorHandler();
 		if (errorHandler != null) {
 			try {
+				// 2.1 如果errorHandler不为null，则使用带错误处理的方式调用给定的监听器
 				doInvokeListener(listener, event);
 			}
 			catch (Throwable err) {
@@ -162,6 +175,7 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 			}
 		}
 		else {
+			// 2.2 否则，直接调用调用给定的监听器
 			doInvokeListener(listener, event);
 		}
 	}
@@ -169,6 +183,7 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	private void doInvokeListener(ApplicationListener listener, ApplicationEvent event) {
 		try {
+			// 触发监听器的onApplicationEvent方法，参数为给定的事件
 			listener.onApplicationEvent(event);
 		}
 		catch (ClassCastException ex) {

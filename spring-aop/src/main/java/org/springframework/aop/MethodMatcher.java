@@ -19,6 +19,8 @@ package org.springframework.aop;
 import java.lang.reflect.Method;
 
 /**
+ * 检查 Pointcut 关联的 Advice 是否需要适用于给定的目标方法
+ *
  * Part of a {@link Pointcut}: Checks whether the target method is eligible for advice.
  *
  * <p>A MethodMatcher may be evaluated <b>statically</b> or at <b>runtime</b> (dynamically).
@@ -62,6 +64,7 @@ public interface MethodMatcher {
 	 * @param targetClass the target class
 	 * @return whether or not this method matches statically
 	 */
+	// 对方法进行静态匹配，即不对方法调用的传入的实参进行校验
 	boolean matches(Method method, Class<?> targetClass);
 
 	/**
@@ -74,6 +77,8 @@ public interface MethodMatcher {
 	 * {@link #matches(java.lang.reflect.Method, Class, Object[])} method
 	 * is required if static matching passed
 	 */
+	// 返回当前 MethodMatcher 是否需要进行动态匹配。
+	// 如果 isRuntime() 方法返回 true，则表示需要调用 matches(Method, Class, Object[])方法对目标方法进行匹配
 	boolean isRuntime();
 
 	/**
@@ -90,6 +95,7 @@ public interface MethodMatcher {
 	 * @return whether there's a runtime match
 	 * @see MethodMatcher#matches(Method, Class)
 	 */
+	// 对方法进行动态匹配，即对方法调用的传入的实参进行校验
 	boolean matches(Method method, Class<?> targetClass, Object... args);
 
 

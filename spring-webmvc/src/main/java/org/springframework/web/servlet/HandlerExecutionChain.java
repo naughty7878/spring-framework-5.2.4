@@ -134,11 +134,16 @@ public class HandlerExecutionChain {
 	 * that this interceptor has already dealt with the response itself.
 	 */
 	boolean applyPreHandle(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		// 获取拦截器
 		HandlerInterceptor[] interceptors = getInterceptors();
 		if (!ObjectUtils.isEmpty(interceptors)) {
+			// 遍历
 			for (int i = 0; i < interceptors.length; i++) {
 				HandlerInterceptor interceptor = interceptors[i];
+				// 调用拦截器前置处理器方法
 				if (!interceptor.preHandle(request, response, this.handler)) {
+					// 进入说明，请求失败
+					// 触发处理器执行链完成后方法
 					triggerAfterCompletion(request, response, null);
 					return false;
 				}

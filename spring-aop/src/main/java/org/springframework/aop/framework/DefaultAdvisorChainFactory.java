@@ -53,16 +53,23 @@ public class DefaultAdvisorChainFactory implements AdvisorChainFactory, Serializ
 
 		// This is somewhat tricky... We have to process introductions first,
 		// but we need to preserve order in the ultimate list.
+		// 获取一个全局唯一的 AdvisorAdapterRegistry  对象
+		// 通知器适配注册对象
 		AdvisorAdapterRegistry registry = GlobalAdvisorAdapterRegistry.getInstance();
+		// 从配置(代理工厂)中获取通知器
 		Advisor[] advisors = config.getAdvisors();
+		// 创建拦截器集合
 		List<Object> interceptorList = new ArrayList<>(advisors.length);
+		// 获取目标的真正Class
 		Class<?> actualClass = (targetClass != null ? targetClass : method.getDeclaringClass());
 		Boolean hasIntroductions = null;
-
+		// 遍历
 		for (Advisor advisor : advisors) {
+			// 属性切入点通知器
 			if (advisor instanceof PointcutAdvisor) {
 				// Add it conditionally.
 				PointcutAdvisor pointcutAdvisor = (PointcutAdvisor) advisor;
+				// 是否前期筛选 ｜｜ matches(actualClass) 类级别匹配
 				if (config.isPreFiltered() || pointcutAdvisor.getPointcut().getClassFilter().matches(actualClass)) {
 					MethodMatcher mm = pointcutAdvisor.getPointcut().getMethodMatcher();
 					boolean match;
@@ -70,12 +77,15 @@ public class DefaultAdvisorChainFactory implements AdvisorChainFactory, Serializ
 						if (hasIntroductions == null) {
 							hasIntroductions = hasMatchingIntroductions(advisors, actualClass);
 						}
+						// 进行方法级别匹配
 						match = ((IntroductionAwareMethodMatcher) mm).matches(method, actualClass, hasIntroductions);
 					}
 					else {
+						// 进行方法级别匹配
 						match = mm.matches(method, actualClass);
 					}
 					if (match) {
+						// 通知从通知器中获取拦截器
 						MethodInterceptor[] interceptors = registry.getInterceptors(advisor);
 						if (mm.isRuntime()) {
 							// Creating a new object instance in the getInterceptors() method
@@ -85,11 +95,13 @@ public class DefaultAdvisorChainFactory implements AdvisorChainFactory, Serializ
 							}
 						}
 						else {
+							// 添加到拦截器集合中
 							interceptorList.addAll(Arrays.asList(interceptors));
 						}
 					}
 				}
 			}
+			// 属于引用通知器
 			else if (advisor instanceof IntroductionAdvisor) {
 				IntroductionAdvisor ia = (IntroductionAdvisor) advisor;
 				if (config.isPreFiltered() || ia.getClassFilter().matches(actualClass)) {

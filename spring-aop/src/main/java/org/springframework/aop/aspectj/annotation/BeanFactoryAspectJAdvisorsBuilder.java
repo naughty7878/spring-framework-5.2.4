@@ -80,7 +80,9 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 	 * @return the list of {@link org.springframework.aop.Advisor} beans
 	 * @see #isEligibleBean
 	 */
+	// 构建切面Advisor
 	public List<Advisor> buildAspectJAdvisors() {
+		// 切面名单
 		List<String> aspectNames = this.aspectBeanNames;
 
 		if (aspectNames == null) {
@@ -89,24 +91,34 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 				if (aspectNames == null) {
 					List<Advisor> advisors = new ArrayList<>();
 					aspectNames = new ArrayList<>();
+					// 获取Bean工厂容器中的所有类名单
 					String[] beanNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
 							this.beanFactory, Object.class, true, false);
+					// 遍历类名单
 					for (String beanName : beanNames) {
+						// 是否是符合条件的bean
 						if (!isEligibleBean(beanName)) {
 							continue;
 						}
 						// We must be careful not to instantiate beans eagerly as in this case they
 						// would be cached by the Spring container but would not have been weaved.
+						// 获取Bean的Class
 						Class<?> beanType = this.beanFactory.getType(beanName);
 						if (beanType == null) {
 							continue;
 						}
+						// 是否是切面
 						if (this.advisorFactory.isAspect(beanType)) {
+							// 添加到切面名单中
 							aspectNames.add(beanName);
+							// 获取切面元信息
 							AspectMetadata amd = new AspectMetadata(beanType, beanName);
+							// 判断是类型是单例的
 							if (amd.getAjType().getPerClause().getKind() == PerClauseKind.SINGLETON) {
+								// 创建元信息感知切面实例化工厂
 								MetadataAwareAspectInstanceFactory factory =
 										new BeanFactoryAspectInstanceFactory(this.beanFactory, beanName);
+								// 获取Advisors，切面中的Advisor
 								List<Advisor> classAdvisors = this.advisorFactory.getAdvisors(factory);
 								if (this.beanFactory.isSingleton(beanName)) {
 									this.advisorsCache.put(beanName, classAdvisors);
@@ -135,11 +147,15 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 			}
 		}
 
+		// 切面名单为空，即上面没获取到切面，返回空集合
 		if (aspectNames.isEmpty()) {
+			// 返回同集合
 			return Collections.emptyList();
 		}
+		// 切面名单不为空，则去缓存中找
 		List<Advisor> advisors = new ArrayList<>();
 		for (String aspectName : aspectNames) {
+			// 获取缓存
 			List<Advisor> cachedAdvisors = this.advisorsCache.get(aspectName);
 			if (cachedAdvisors != null) {
 				advisors.addAll(cachedAdvisors);

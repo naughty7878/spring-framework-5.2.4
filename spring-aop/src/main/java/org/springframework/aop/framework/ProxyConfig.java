@@ -33,13 +33,14 @@ public class ProxyConfig implements Serializable {
 	/** use serialVersionUID from Spring 1.2 for interoperability. */
 	private static final long serialVersionUID = -8409359707199703185L;
 
-
+	// 是否是代理目标类，这个属性为true时，目标类本身被代理而不是目标类的接口。
 	private boolean proxyTargetClass = false;
 
+	// 用来控制通过CGLIB创建的代理是否使用激进的优化策略
 	private boolean optimize = false;
 
 	boolean opaque = false;
-
+	// true则表示这个代理对象的副本就可以通过AopContext.currentProxy()获得（ThreadLocal里面）
 	boolean exposeProxy = false;
 
 	private boolean frozen = false;
@@ -148,6 +149,7 @@ public class ProxyConfig implements Serializable {
 
 
 	/**
+	 * 从代理配置中复制属性
 	 * Copy configuration from the other config object.
 	 * @param other object to copy configuration from
 	 */

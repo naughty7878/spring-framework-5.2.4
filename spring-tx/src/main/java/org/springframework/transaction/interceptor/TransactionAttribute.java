@@ -33,6 +33,8 @@ import org.springframework.transaction.TransactionDefinition;
 public interface TransactionAttribute extends TransactionDefinition {
 
 	/**
+	 * 返回与此事务属性关联的限定符值
+	 *
 	 * Return a qualifier value associated with this transaction attribute.
 	 * <p>This may be used for choosing a corresponding transaction manager
 	 * to process this specific transaction.

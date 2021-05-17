@@ -50,9 +50,11 @@ public class ConnectionHolder extends ResourceHolderSupport {
 	@Nullable
 	private ConnectionHandle connectionHandle;
 
+	// 当前连接
 	@Nullable
 	private Connection currentConnection;
 
+	// 链接持有者的 事务活跃状态
 	private boolean transactionActive = false;
 
 	@Nullable
@@ -159,6 +161,7 @@ public class ConnectionHolder extends ResourceHolderSupport {
 	public Connection getConnection() {
 		Assert.notNull(this.connectionHandle, "Active Connection is required");
 		if (this.currentConnection == null) {
+			// 从连接处理器中，获取连接，并赋值给当前连接currentConnection
 			this.currentConnection = this.connectionHandle.getConnection();
 		}
 		return this.currentConnection;

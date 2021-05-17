@@ -18,6 +18,8 @@ package org.aopalliance.intercept;
 
 import org.aopalliance.aop.Advice;
 
+
+
 /**
  * This interface represents a generic interceptor.
  *

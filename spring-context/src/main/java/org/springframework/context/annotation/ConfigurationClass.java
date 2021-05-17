@@ -48,15 +48,20 @@ import org.springframework.util.ClassUtils;
  */
 final class ConfigurationClass {
 
+	// 注解原数据
 	private final AnnotationMetadata metadata;
 
+	// 资源
 	private final Resource resource;
 
+	// Bean名称
 	@Nullable
 	private String beanName;
 
+	// 自己被谁导入的（可能被多个对象导入）导入者集合
 	private final Set<ConfigurationClass> importedBy = new LinkedHashSet<>(1);
 
+	// 配置类中 被@Bean标注过的方法
 	private final Set<BeanMethod> beanMethods = new LinkedHashSet<>();
 
 	private final Map<String, Class<? extends BeanDefinitionReader>> importedResources =
@@ -116,9 +121,11 @@ final class ConfigurationClass {
 	 * @param importedBy the configuration class importing this one (or {@code null})
 	 * @since 3.1.1
 	 */
+	// 注意此创建ConfigurationClass 方法，没有beanName
 	public ConfigurationClass(Class<?> clazz, @Nullable ConfigurationClass importedBy) {
 		this.metadata = AnnotationMetadata.introspect(clazz);
 		this.resource = new DescriptiveResource(clazz.getName());
+		// 导入着
 		this.importedBy.add(importedBy);
 	}
 
@@ -164,6 +171,7 @@ final class ConfigurationClass {
 	 * @see #getImportedBy()
 	 */
 	public boolean isImported() {
+		// 根据导入者集合，判断当前对象是否是被导入的
 		return !this.importedBy.isEmpty();
 	}
 
@@ -171,6 +179,7 @@ final class ConfigurationClass {
 	 * Merge the imported-by declarations from the given configuration class into this one.
 	 * @since 4.0.5
 	 */
+	// 合并导入者
 	public void mergeImportedBy(ConfigurationClass otherConfigClass) {
 		this.importedBy.addAll(otherConfigClass.importedBy);
 	}

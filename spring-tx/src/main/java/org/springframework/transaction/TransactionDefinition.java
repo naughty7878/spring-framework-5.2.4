@@ -133,6 +133,7 @@ public interface TransactionDefinition {
 
 
 	/**
+	 * 默认隔离级别。用底层数据库的默认隔离级别
 	 * Use the default isolation level of the underlying datastore.
 	 * All other levels correspond to the JDBC isolation levels.
 	 * @see java.sql.Connection
@@ -140,6 +141,8 @@ public interface TransactionDefinition {
 	int ISOLATION_DEFAULT = -1;
 
 	/**
+	 * 读未提交，
+	 * 即能够读取到没有被提交的数据，所以很明显这个级别的隔离机制无法解决脏读、不可重复读、幻读中的任何一种，因此很少使用
 	 * Indicates that dirty reads, non-repeatable reads and phantom reads
 	 * can occur.
 	 * <p>This level allows a row changed by one transaction to be read by another
@@ -151,6 +154,8 @@ public interface TransactionDefinition {
 	int ISOLATION_READ_UNCOMMITTED = 1;  // same as java.sql.Connection.TRANSACTION_READ_UNCOMMITTED;
 
 	/**
+	 * 读已提交，
+	 * 即能够读到那些已经提交的数据，自然能够防止脏读，但是无法限制不可重复读和幻读
 	 * Indicates that dirty reads are prevented; non-repeatable reads and
 	 * phantom reads can occur.
 	 * <p>This level only prohibits a transaction from reading a row
@@ -160,6 +165,10 @@ public interface TransactionDefinition {
 	int ISOLATION_READ_COMMITTED = 2;  // same as java.sql.Connection.TRANSACTION_READ_COMMITTED;
 
 	/**
+	 * 重复读取，
+	 * 即在数据读出来之后加锁，类似"select * from XXX for update"，明确数据读取出来就是为了更新用的，
+	 * 所以要加一把锁，防止别人修改它。REPEATABLE_READ的意思也类似，读取了一条数据，这个事务不结束，
+	 * 别的事务就不可以改这条记录，这样就解决了脏读、不可重复读的问题，但是幻读的问题还是无法解决
 	 * Indicates that dirty reads and non-repeatable reads are prevented;
 	 * phantom reads can occur.
 	 * <p>This level prohibits a transaction from reading a row with uncommitted changes
@@ -171,6 +180,10 @@ public interface TransactionDefinition {
 	int ISOLATION_REPEATABLE_READ = 4;  // same as java.sql.Connection.TRANSACTION_REPEATABLE_READ;
 
 	/**
+	 * 串行化，
+	 * 最高的事务隔离级别，不管多少事务，
+	 * 挨个运行完一个事务的所有子事务之后才可以执行另外一个事务里面的所有子事务，
+	 * 这样就解决了脏读、不可重复读和幻读的问题了　　
 	 * Indicates that dirty reads, non-repeatable reads and phantom reads
 	 * are prevented.
 	 * <p>This level includes the prohibitions in {@link #ISOLATION_REPEATABLE_READ}

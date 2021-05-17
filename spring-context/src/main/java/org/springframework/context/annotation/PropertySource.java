@@ -175,6 +175,7 @@ public @interface PropertySource {
 	 * @see org.springframework.core.env.PropertySource#getName()
 	 * @see org.springframework.core.io.Resource#getDescription()
 	 */
+	// 属性源的名称
 	String name() default "";
 
 	/**
@@ -190,6 +191,7 @@ public @interface PropertySource {
 	 * <p>Each location will be added to the enclosing {@code Environment} as its own
 	 * property source, and in the order declared.
 	 */
+	// 属性文件的存放路径
 	String[] value();
 
 	/**
@@ -199,12 +201,14 @@ public @interface PropertySource {
 	 * Default is {@code false}.
 	 * @since 4.0
 	 */
+	// 如果指定的属性源不存在，是否要忽略这个错误，默认为false
 	boolean ignoreResourceNotFound() default false;
 
 	/**
 	 * A specific character encoding for the given resources, e.g. "UTF-8".
 	 * @since 4.3
 	 */
+	// 属性源的编码格式
 	String encoding() default "";
 
 	/**
@@ -214,6 +218,7 @@ public @interface PropertySource {
 	 * @see org.springframework.core.io.support.DefaultPropertySourceFactory
 	 * @see org.springframework.core.io.support.ResourcePropertySource
 	 */
+	// 属性源工厂
 	Class<? extends PropertySourceFactory> factory() default PropertySourceFactory.class;
 
 }

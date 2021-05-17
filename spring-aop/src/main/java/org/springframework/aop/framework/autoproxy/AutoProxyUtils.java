@@ -70,6 +70,7 @@ public abstract class AutoProxyUtils {
 
 		if (beanName != null && beanFactory.containsBeanDefinition(beanName)) {
 			BeanDefinition bd = beanFactory.getBeanDefinition(beanName);
+			// 从bean定义中获取属性 preserveTargetClass
 			return Boolean.TRUE.equals(bd.getAttribute(PRESERVE_TARGET_CLASS_ATTRIBUTE));
 		}
 		return false;
@@ -102,6 +103,7 @@ public abstract class AutoProxyUtils {
 	}
 
 	/**
+	 * 暴露目标Class
 	 * Expose the given target class for the specified bean, if possible.
 	 * @param beanFactory the containing ConfigurableListableBeanFactory
 	 * @param beanName the name of the bean
@@ -110,8 +112,9 @@ public abstract class AutoProxyUtils {
 	 */
 	static void exposeTargetClass(
 			ConfigurableListableBeanFactory beanFactory, @Nullable String beanName, Class<?> targetClass) {
-
+		// bean工厂包含了beanName的Bean定义
 		if (beanName != null && beanFactory.containsBeanDefinition(beanName)) {
+			// 设置bean定义的属性（"originalTargetClass" = targetClass）
 			beanFactory.getMergedBeanDefinition(beanName).setAttribute(ORIGINAL_TARGET_CLASS_ATTRIBUTE, targetClass);
 		}
 	}
@@ -126,6 +129,7 @@ public abstract class AutoProxyUtils {
 	 * @see AutowireCapableBeanFactory#ORIGINAL_INSTANCE_SUFFIX
 	 */
 	static boolean isOriginalInstance(String beanName, Class<?> beanClass) {
+		// bean的名称长度，是否与类名的长度不相同，不相同则为true
 		if (!StringUtils.hasLength(beanName) || beanName.length() !=
 				beanClass.getName().length() + AutowireCapableBeanFactory.ORIGINAL_INSTANCE_SUFFIX.length()) {
 			return false;

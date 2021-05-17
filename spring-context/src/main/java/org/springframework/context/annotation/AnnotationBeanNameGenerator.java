@@ -74,13 +74,16 @@ public class AnnotationBeanNameGenerator implements BeanNameGenerator {
 	@Override
 	public String generateBeanName(BeanDefinition definition, BeanDefinitionRegistry registry) {
 		if (definition instanceof AnnotatedBeanDefinition) {
+			// 从注解中形成Bean名称
 			String beanName = determineBeanNameFromAnnotation((AnnotatedBeanDefinition) definition);
 			if (StringUtils.hasText(beanName)) {
 				// Explicit bean name found.
+				// beanName不为空 返回
 				return beanName;
 			}
 		}
 		// Fallback: generate a unique default bean name.
+		// 构建默认的Bean名称
 		return buildDefaultBeanName(definition, registry);
 	}
 
@@ -89,22 +92,30 @@ public class AnnotationBeanNameGenerator implements BeanNameGenerator {
 	 * @param annotatedDef the annotation-aware bean definition
 	 * @return the bean name, or {@code null} if none is found
 	 */
+	// 从注解中形成Bean名称
 	@Nullable
 	protected String determineBeanNameFromAnnotation(AnnotatedBeanDefinition annotatedDef) {
+		// 获取注解元信息
 		AnnotationMetadata amd = annotatedDef.getMetadata();
+		// 获取注解类型
 		Set<String> types = amd.getAnnotationTypes();
 		String beanName = null;
+		// 遍历
 		for (String type : types) {
+			// 获取注解的属性
 			AnnotationAttributes attributes = AnnotationConfigUtils.attributesFor(amd, type);
 			if (attributes != null && isStereotypeWithNameValue(type, amd.getMetaAnnotationTypes(type), attributes)) {
+				// 获取value 的 值
 				Object value = attributes.get("value");
 				if (value instanceof String) {
 					String strVal = (String) value;
 					if (StringUtils.hasLength(strVal)) {
 						if (beanName != null && !strVal.equals(beanName)) {
+							// 可能存在2个注解定义了名称，造成冲突
 							throw new IllegalStateException("Stereotype annotations suggest inconsistent " +
 									"component names: '" + beanName + "' versus '" + strVal + "'");
 						}
+						// 将获取的值，作为beanName
 						beanName = strVal;
 					}
 				}
@@ -140,6 +151,7 @@ public class AnnotationBeanNameGenerator implements BeanNameGenerator {
 	 * @return the default bean name (never {@code null})
 	 */
 	protected String buildDefaultBeanName(BeanDefinition definition, BeanDefinitionRegistry registry) {
+		// 构建默认的Bean名称
 		return buildDefaultBeanName(definition);
 	}
 
@@ -153,6 +165,7 @@ public class AnnotationBeanNameGenerator implements BeanNameGenerator {
 	 * @param definition the bean definition to build a bean name for
 	 * @return the default bean name (never {@code null})
 	 */
+	// 创建默认的beanName
 	protected String buildDefaultBeanName(BeanDefinition definition) {
 		String beanClassName = definition.getBeanClassName();
 		Assert.state(beanClassName != null, "No bean class name set");

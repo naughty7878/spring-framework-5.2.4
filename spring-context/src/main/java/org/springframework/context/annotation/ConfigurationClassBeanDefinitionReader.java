@@ -114,9 +114,12 @@ class ConfigurationClassBeanDefinitionReader {
 	 * Read {@code configurationModel}, registering bean definitions
 	 * with the registry based on its contents.
 	 */
+
 	public void loadBeanDefinitions(Set<ConfigurationClass> configurationModel) {
 		TrackedConditionEvaluator trackedConditionEvaluator = new TrackedConditionEvaluator();
 		for (ConfigurationClass configClass : configurationModel) {
+			// 	读取一个单独的ConfigurationClass类，
+			// 	注册bean本身（@Import引入的普通类）或者@Configuration配置类的bean方法
 			loadBeanDefinitionsForConfigurationClass(configClass, trackedConditionEvaluator);
 		}
 	}
@@ -127,7 +130,7 @@ class ConfigurationClassBeanDefinitionReader {
 	 */
 	private void loadBeanDefinitionsForConfigurationClass(
 			ConfigurationClass configClass, TrackedConditionEvaluator trackedConditionEvaluator) {
-
+		// 跟踪条件评估是否跳过
 		if (trackedConditionEvaluator.shouldSkip(configClass)) {
 			String beanName = configClass.getBeanName();
 			if (StringUtils.hasLength(beanName) && this.registry.containsBeanDefinition(beanName)) {
@@ -137,31 +140,41 @@ class ConfigurationClassBeanDefinitionReader {
 			return;
 		}
 
+		// 判断经过解析的是不是通过导入方式（@Import或者内部类）进来的
 		if (configClass.isImported()) {
+			// 注册导入的配置类的Bean定义
 			registerBeanDefinitionForImportedConfigurationClass(configClass);
 		}
+		// 获取配置类中的Bean方法(即被@Bean标注的方法)
 		for (BeanMethod beanMethod : configClass.getBeanMethods()) {
+			// 从Bean方法中加载Bean定义
 			loadBeanDefinitionsForBeanMethod(beanMethod);
 		}
-
+		// 加载bean定义，通过@ImportResources导入进来的
 		loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());
+		// 加载bean定义，通过@ImportBeanDefinition导入进来的
 		loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());
 	}
 
 	/**
+	 *  注册导入的配置类的Bean定义
 	 * Register the {@link Configuration} class itself as a bean definition.
 	 */
 	private void registerBeanDefinitionForImportedConfigurationClass(ConfigurationClass configClass) {
 		AnnotationMetadata metadata = configClass.getMetadata();
+		// 创建一个注解bean定义
 		AnnotatedGenericBeanDefinition configBeanDef = new AnnotatedGenericBeanDefinition(metadata);
 
 		ScopeMetadata scopeMetadata = scopeMetadataResolver.resolveScopeMetadata(configBeanDef);
 		configBeanDef.setScope(scopeMetadata.getScopeName());
+		// 生成bean的名称
 		String configBeanName = this.importBeanNameGenerator.generateBeanName(configBeanDef, this.registry);
 		AnnotationConfigUtils.processCommonDefinitionAnnotations(configBeanDef, metadata);
 
+		// 创建一个BeanDefinitionHolder
 		BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(configBeanDef, configBeanName);
 		definitionHolder = AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
+		// 注册Bean定义
 		this.registry.registerBeanDefinition(definitionHolder.getBeanName(), definitionHolder.getBeanDefinition());
 		configClass.setBeanName(configBeanName);
 
@@ -175,6 +188,7 @@ class ConfigurationClassBeanDefinitionReader {
 	 * with the BeanDefinitionRegistry based on its contents.
 	 */
 	@SuppressWarnings("deprecation")  // for RequiredAnnotationBeanPostProcessor.SKIP_REQUIRED_CHECK_ATTRIBUTE
+	// 从Bean方法中加载Bean定义
 	private void loadBeanDefinitionsForBeanMethod(BeanMethod beanMethod) {
 		ConfigurationClass configClass = beanMethod.getConfigurationClass();
 		MethodMetadata metadata = beanMethod.getMetadata();
@@ -188,21 +202,30 @@ class ConfigurationClassBeanDefinitionReader {
 		if (configClass.skippedBeanMethods.contains(methodName)) {
 			return;
 		}
-
+		// 获取@Bean注解的属性
 		AnnotationAttributes bean = AnnotationConfigUtils.attributesFor(metadata, Bean.class);
 		Assert.state(bean != null, "No @Bean annotation attributes");
 
-		// Consider name and any aliases
+		// Consider name and any aliases	获取bean名称
 		List<String> names = new ArrayList<>(Arrays.asList(bean.getStringArray("name")));
 		String beanName = (!names.isEmpty() ? names.remove(0) : methodName);
 
 		// Register aliases even when overridden
+		// 有别名注册别名
 		for (String alias : names) {
 			this.registry.registerAlias(beanName, alias);
 		}
 
 		// Has this effectively been overridden before (e.g. via XML)?
+		// 是否覆盖已经存在的Bean定义
+		/**
+		 * 0、不存在相同Bean定义名称的，则返回false。继续添加bean定义
+		 * 1、配置类的名字相同，则报错
+		 * 2、同一个配置类中的@Bean名字相同，则返回true，意思是以先加载的@Bean方法为准
+		 * 3、不同的配置类中的@Bean名字相同，则返回false，意思是可以被覆盖，已后被加载的@Bean方法为准
+		 */
 		if (isOverriddenByExistingDefinition(beanMethod, beanName)) {
+			// 配置类名称相同报异常
 			if (beanName.equals(beanMethod.getConfigurationClass().getBeanName())) {
 				throw new BeanDefinitionStoreException(beanMethod.getConfigurationClass().getResource().getDescription(),
 						beanName, "Bean name derived from @Bean method '" + beanMethod.getMetadata().getMethodName() +
@@ -211,6 +234,7 @@ class ConfigurationClassBeanDefinitionReader {
 			return;
 		}
 
+		// 创建配置类的Bean定义
 		ConfigurationClassBeanDefinition beanDef = new ConfigurationClassBeanDefinition(configClass, metadata);
 		beanDef.setResource(configClass.getResource());
 		beanDef.setSource(this.sourceExtractor.extractSource(metadata, configClass.getResource()));
@@ -227,40 +251,45 @@ class ConfigurationClassBeanDefinitionReader {
 		}
 		else {
 			// instance @Bean method
+			// 设置工厂Bean名称
 			beanDef.setFactoryBeanName(configClass.getBeanName());
+			// 设置唯一的工厂方法名
 			beanDef.setUniqueFactoryMethodName(methodName);
 		}
 
 		if (metadata instanceof StandardMethodMetadata) {
+			// 设置解析工厂方法，就是元信息中的内置方法
 			beanDef.setResolvedFactoryMethod(((StandardMethodMetadata) metadata).getIntrospectedMethod());
 		}
-
+		// 设置bean定义-按构造器自动装配
 		beanDef.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_CONSTRUCTOR);
+		// 设置bean定义的属性skipRequiredCheck，跳过Required检查
 		beanDef.setAttribute(org.springframework.beans.factory.annotation.RequiredAnnotationBeanPostProcessor.
 				SKIP_REQUIRED_CHECK_ATTRIBUTE, Boolean.TRUE);
-
+		// 处理Bean定义中通用注解
 		AnnotationConfigUtils.processCommonDefinitionAnnotations(beanDef, metadata);
 
 		Autowire autowire = bean.getEnum("autowire");
 		if (autowire.isAutowire()) {
 			beanDef.setAutowireMode(autowire.value());
 		}
-
+		// 自动装载条件
 		boolean autowireCandidate = bean.getBoolean("autowireCandidate");
 		if (!autowireCandidate) {
 			beanDef.setAutowireCandidate(false);
 		}
-
+		// 初始化方法
 		String initMethodName = bean.getString("initMethod");
 		if (StringUtils.hasText(initMethodName)) {
 			beanDef.setInitMethodName(initMethodName);
 		}
-
+		// 销毁方法
 		String destroyMethodName = bean.getString("destroyMethod");
 		beanDef.setDestroyMethodName(destroyMethodName);
 
-		// Consider scoping
+		// Consider scoping 代理模式
 		ScopedProxyMode proxyMode = ScopedProxyMode.NO;
+		// 获取作用域Scope
 		AnnotationAttributes attributes = AnnotationConfigUtils.attributesFor(metadata, Scope.class);
 		if (attributes != null) {
 			beanDef.setScope(attributes.getString("value"));
@@ -284,9 +313,11 @@ class ConfigurationClassBeanDefinitionReader {
 			logger.trace(String.format("Registering bean definition for @Bean method %s.%s()",
 					configClass.getMetadata().getClassName(), beanName));
 		}
+		// 注册Bean定义
 		this.registry.registerBeanDefinition(beanName, beanDefToRegister);
 	}
 
+	// 是否覆盖已经存在的Bean定义
 	protected boolean isOverriddenByExistingDefinition(BeanMethod beanMethod, String beanName) {
 		if (!this.registry.containsBeanDefinition(beanName)) {
 			return false;
@@ -313,12 +344,14 @@ class ConfigurationClassBeanDefinitionReader {
 
 		// A bean definition resulting from a component scan can be silently overridden
 		// by an @Bean method, as of 4.2...
+		// 属性扫描生成的Bean定义
 		if (existingBeanDef instanceof ScannedGenericBeanDefinition) {
 			return false;
 		}
 
 		// Has the existing bean definition bean marked as a framework-generated bean?
 		// -> allow the current bean method to override it, since it is application-level
+		// 现有的bean定义bean是否标记为框架生成的bean
 		if (existingBeanDef.getRole() > BeanDefinition.ROLE_APPLICATION) {
 			return false;
 		}
@@ -346,27 +379,35 @@ class ConfigurationClassBeanDefinitionReader {
 		importedResources.forEach((resource, readerClass) -> {
 			// Default reader selection necessary?
 			if (BeanDefinitionReader.class == readerClass) {
+				// 判断后缀是否是".groovy" 结尾
 				if (StringUtils.endsWithIgnoreCase(resource, ".groovy")) {
 					// When clearly asking for Groovy, that's what they'll get...
+					// 读取 readerClass 为 GroovyBeanDefinitionReader.class
 					readerClass = GroovyBeanDefinitionReader.class;
 				}
 				else {
 					// Primarily ".xml" files but for any other extension as well
+					// 赋值xml的bean定义读取器Class
 					readerClass = XmlBeanDefinitionReader.class;
 				}
 			}
-
+			// 从缓存中获取读取器
 			BeanDefinitionReader reader = readerInstanceCache.get(readerClass);
 			if (reader == null) {
 				try {
 					// Instantiate the specified BeanDefinitionReader
+					// 使用反射的方法获取读取器
 					reader = readerClass.getConstructor(BeanDefinitionRegistry.class).newInstance(this.registry);
 					// Delegate the current ResourceLoader to it if possible
+					// 属于抽象bean定义读取器
 					if (reader instanceof AbstractBeanDefinitionReader) {
 						AbstractBeanDefinitionReader abdr = ((AbstractBeanDefinitionReader) reader);
+						// 给读取器添加资源加载器
 						abdr.setResourceLoader(this.resourceLoader);
+						// 给读取器添加环境
 						abdr.setEnvironment(this.environment);
 					}
+					// 读取器放入缓存中
 					readerInstanceCache.put(readerClass, reader);
 				}
 				catch (Throwable ex) {
@@ -376,6 +417,7 @@ class ConfigurationClassBeanDefinitionReader {
 			}
 
 			// TODO SPR-6310: qualify relative path locations as done in AbstractContextLoader.modifyLocations
+			// 读取器通过resource资源路径，加载bean定义
 			reader.loadBeanDefinitions(resource);
 		});
 	}

@@ -45,16 +45,20 @@ public abstract class AspectJProxyUtils {
 	public static boolean makeAdvisorChainAspectJCapableIfNecessary(List<Advisor> advisors) {
 		// Don't add advisors to an empty list; may indicate that proxying is just not required
 		if (!advisors.isEmpty()) {
+			// 是否找到Aspect 通知标识
 			boolean foundAspectJAdvice = false;
 			for (Advisor advisor : advisors) {
 				// Be careful not to get the Advice without a guard, as this might eagerly
 				// instantiate a non-singleton AspectJ aspect...
+				// 判断是否是 Aspect代理通知
 				if (isAspectJAdvice(advisor)) {
 					foundAspectJAdvice = true;
 					break;
 				}
 			}
+			// ExposeInvocationInterceptor 暴露调用器的拦截器
 			if (foundAspectJAdvice && !advisors.contains(ExposeInvocationInterceptor.ADVISOR)) {
+				// 在下标为0的位置，插入一个 暴露调用器的拦截器
 				advisors.add(0, ExposeInvocationInterceptor.ADVISOR);
 				return true;
 			}

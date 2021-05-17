@@ -43,10 +43,12 @@ import org.springframework.util.Assert;
  */
 public class FullyQualifiedAnnotationBeanNameGenerator extends AnnotationBeanNameGenerator {
 
+	// 根据默认的bean名称
 	@Override
 	protected String buildDefaultBeanName(BeanDefinition definition) {
 		String beanClassName = definition.getBeanClassName();
 		Assert.state(beanClassName != null, "No bean class name set");
+		// 使用beanClassName作为bean名称
 		return beanClassName;
 	}
 

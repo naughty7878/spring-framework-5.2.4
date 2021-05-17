@@ -49,6 +49,7 @@ class ApplicationListenerDetector implements DestructionAwareBeanPostProcessor, 
 
 	private final transient AbstractApplicationContext applicationContext;
 
+	// 监听器单例名单集合，key：bean名称，value：是否是单例
 	private final transient Map<String, Boolean> singletonNames = new ConcurrentHashMap<>(256);
 
 
@@ -59,7 +60,9 @@ class ApplicationListenerDetector implements DestructionAwareBeanPostProcessor, 
 
 	@Override
 	public void postProcessMergedBeanDefinition(RootBeanDefinition beanDefinition, Class<?> beanType, String beanName) {
+		// isAssignableFrom()方法是判断是否为某个类的父类
 		if (ApplicationListener.class.isAssignableFrom(beanType)) {
+			// 添加到监听器单例与多例，关系名单中
 			this.singletonNames.put(beanName, beanDefinition.isSingleton());
 		}
 	}
@@ -76,6 +79,7 @@ class ApplicationListenerDetector implements DestructionAwareBeanPostProcessor, 
 			Boolean flag = this.singletonNames.get(beanName);
 			if (Boolean.TRUE.equals(flag)) {
 				// singleton bean (top-level or inner): register on the fly
+				// 添加到上下文监听器集合中
 				this.applicationContext.addApplicationListener((ApplicationListener<?>) bean);
 			}
 			else if (Boolean.FALSE.equals(flag)) {
@@ -86,6 +90,7 @@ class ApplicationListenerDetector implements DestructionAwareBeanPostProcessor, 
 							"because it does not have singleton scope. Only top-level listener beans are allowed " +
 							"to be of non-singleton scope.");
 				}
+				// 如果不是单例，则从名单中移除
 				this.singletonNames.remove(beanName);
 			}
 		}
@@ -97,6 +102,7 @@ class ApplicationListenerDetector implements DestructionAwareBeanPostProcessor, 
 		if (bean instanceof ApplicationListener) {
 			try {
 				ApplicationEventMulticaster multicaster = this.applicationContext.getApplicationEventMulticaster();
+				// 从事件广播器中移除
 				multicaster.removeApplicationListener((ApplicationListener<?>) bean);
 				multicaster.removeApplicationListenerBean(beanName);
 			}

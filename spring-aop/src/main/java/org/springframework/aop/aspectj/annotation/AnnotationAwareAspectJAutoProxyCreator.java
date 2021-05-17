@@ -52,9 +52,11 @@ public class AnnotationAwareAspectJAutoProxyCreator extends AspectJAwareAdvisorA
 	@Nullable
 	private List<Pattern> includePatterns;
 
+	// 切面通知工厂
 	@Nullable
 	private AspectJAdvisorFactory aspectJAdvisorFactory;
 
+	// 切面通知构件这
 	@Nullable
 	private BeanFactoryAspectJAdvisorsBuilder aspectJAdvisorsBuilder;
 
@@ -85,13 +87,14 @@ public class AnnotationAwareAspectJAutoProxyCreator extends AspectJAwareAdvisorA
 				new BeanFactoryAspectJAdvisorsBuilderAdapter(beanFactory, this.aspectJAdvisorFactory);
 	}
 
-
+	// 获取可用的Advisor通知
 	@Override
 	protected List<Advisor> findCandidateAdvisors() {
 		// Add all the Spring advisors found according to superclass rules.
 		List<Advisor> advisors = super.findCandidateAdvisors();
 		// Build Advisors for all AspectJ aspects in the bean factory.
 		if (this.aspectJAdvisorsBuilder != null) {
+			// 构建切面Advisor
 			advisors.addAll(this.aspectJAdvisorsBuilder.buildAspectJAdvisors());
 		}
 		return advisors;
@@ -107,7 +110,10 @@ public class AnnotationAwareAspectJAutoProxyCreator extends AspectJAwareAdvisorA
 		// proxied by that interface and fail at runtime as the advice method is not
 		// defined on the interface. We could potentially relax the restriction about
 		// not advising aspects in the future.
+		// 是否是基础框架类类(Advice/Pointcut/Advisor/AopInfrastructureBean)
 		return (super.isInfrastructureClass(beanClass) ||
+				// aspectJAdvisorFactory != nulll    	切面Advisor工厂是否为空
+				// aspectJAdvisorFactory.isAspect() 	是否是切面
 				(this.aspectJAdvisorFactory != null && this.aspectJAdvisorFactory.isAspect(beanClass)));
 	}
 
@@ -117,6 +123,7 @@ public class AnnotationAwareAspectJAutoProxyCreator extends AspectJAwareAdvisorA
 	 * {@code null} and all beans are included. If "includePatterns" is non-null,
 	 * then one of the patterns must match.
 	 */
+	// 是否是切面bean，默认都是
 	protected boolean isEligibleAspectBean(String beanName) {
 		if (this.includePatterns == null) {
 			return true;
@@ -143,9 +150,10 @@ public class AnnotationAwareAspectJAutoProxyCreator extends AspectJAwareAdvisorA
 
 			super(beanFactory, advisorFactory);
 		}
-
+		// 是否是符合条件bean
 		@Override
 		protected boolean isEligibleBean(String beanName) {
+			// 是否是切面bean
 			return AnnotationAwareAspectJAutoProxyCreator.this.isEligibleAspectBean(beanName);
 		}
 	}

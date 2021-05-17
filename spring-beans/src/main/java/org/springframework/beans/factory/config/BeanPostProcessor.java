@@ -55,7 +55,8 @@ import org.springframework.lang.Nullable;
  * @see ConfigurableBeanFactory#addBeanPostProcessor
  * @see BeanFactoryPostProcessor
  */
-public interface BeanPostProcessor {
+public interface
+BeanPostProcessor {
 
 	/**
 	 * Apply this {@code BeanPostProcessor} to the given new bean instance <i>before</i> any bean

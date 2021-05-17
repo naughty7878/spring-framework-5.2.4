@@ -199,14 +199,17 @@ public abstract class AbstractPropertyResolver implements ConfigurablePropertyRe
 		if (this.nonStrictHelper == null) {
 			this.nonStrictHelper = createPlaceholderHelper(true);
 		}
+		// 去解析占位符的值（text="${xxx.name}"）
 		return doResolvePlaceholders(text, this.nonStrictHelper);
 	}
 
+	// 解析占位符的值
 	@Override
 	public String resolveRequiredPlaceholders(String text) throws IllegalArgumentException {
 		if (this.strictHelper == null) {
 			this.strictHelper = createPlaceholderHelper(false);
 		}
+		// 解析占位符的值（text="${xxx.name}"）
 		return doResolvePlaceholders(text, this.strictHelper);
 	}
 
@@ -231,7 +234,7 @@ public abstract class AbstractPropertyResolver implements ConfigurablePropertyRe
 		return new PropertyPlaceholderHelper(this.placeholderPrefix, this.placeholderSuffix,
 				this.valueSeparator, ignoreUnresolvablePlaceholders);
 	}
-
+	// 解析占位符的值（text="${xxx.name}"）
 	private String doResolvePlaceholders(String text, PropertyPlaceholderHelper helper) {
 		return helper.replacePlaceholders(text, this::getPropertyAsRawString);
 	}

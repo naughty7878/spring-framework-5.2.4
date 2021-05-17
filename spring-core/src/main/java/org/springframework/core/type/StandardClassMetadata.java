@@ -31,7 +31,7 @@ import org.springframework.util.StringUtils;
  * @since 2.5
  */
 public class StandardClassMetadata implements ClassMetadata {
-
+	// 内部的类clazz对象
 	private final Class<?> introspectedClass;
 
 
@@ -47,6 +47,7 @@ public class StandardClassMetadata implements ClassMetadata {
 	}
 
 	/**
+	 * 获取内部的clazz对象
 	 * Return the underlying Class.
 	 */
 	public final Class<?> getIntrospectedClass() {

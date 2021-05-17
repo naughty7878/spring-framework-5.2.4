@@ -41,6 +41,7 @@ class ThrowsAdviceAdapter implements AdvisorAdapter, Serializable {
 
 	@Override
 	public MethodInterceptor getInterceptor(Advisor advisor) {
+		// 返回 MethodInterceptor 接口实现类 ThrowsAdviceInterceptor
 		return new ThrowsAdviceInterceptor(advisor.getAdvice());
 	}
 

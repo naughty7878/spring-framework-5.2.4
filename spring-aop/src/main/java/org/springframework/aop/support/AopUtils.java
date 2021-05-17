@@ -193,7 +193,9 @@ public abstract class AopUtils {
 	 * @see org.springframework.util.ClassUtils#getMostSpecificMethod
 	 */
 	public static Method getMostSpecificMethod(Method method, @Nullable Class<?> targetClass) {
+		// 获取用户的类
 		Class<?> specificTargetClass = (targetClass != null ? ClassUtils.getUserClass(targetClass) : null);
+		// 找到真实对象上对应的方法
 		Method resolvedMethod = ClassUtils.getMostSpecificMethod(method, specificTargetClass);
 		// If we are dealing with method with generic parameters, find the original method.
 		return BridgeMethodResolver.findBridgedMethod(resolvedMethod);
@@ -223,30 +225,41 @@ public abstract class AopUtils {
 	 */
 	public static boolean canApply(Pointcut pc, Class<?> targetClass, boolean hasIntroductions) {
 		Assert.notNull(pc, "Pointcut must not be null");
+		// 获取类过滤器，进行类级别过滤 - 初筛
 		if (!pc.getClassFilter().matches(targetClass)) {
 			return false;
 		}
 
+		// 获取方法匹配器
 		MethodMatcher methodMatcher = pc.getMethodMatcher();
 		if (methodMatcher == MethodMatcher.TRUE) {
 			// No need to iterate the methods if we're matching any method anyway...
+			// 支持所有的方法
 			return true;
 		}
 
+		// 引用感知方法匹配器
 		IntroductionAwareMethodMatcher introductionAwareMethodMatcher = null;
 		if (methodMatcher instanceof IntroductionAwareMethodMatcher) {
+			// 转化
 			introductionAwareMethodMatcher = (IntroductionAwareMethodMatcher) methodMatcher;
 		}
 
 		Set<Class<?>> classes = new LinkedHashSet<>();
+		// 判断当前类是不是代理类
 		if (!Proxy.isProxyClass(targetClass)) {
+			// 不是，则获取类的Class添加到classes集合中
 			classes.add(ClassUtils.getUserClass(targetClass));
 		}
+		// 获取类上的所有接口
 		classes.addAll(ClassUtils.getAllInterfacesForClassAsSet(targetClass));
 
 		for (Class<?> clazz : classes) {
+			// 反射获取类的所有声明方法
 			Method[] methods = ReflectionUtils.getAllDeclaredMethods(clazz);
+			// 遍历方法
 			for (Method method : methods) {
+				// 进行方法匹配
 				if (introductionAwareMethodMatcher != null ?
 						introductionAwareMethodMatcher.matches(method, targetClass, hasIntroductions) :
 						methodMatcher.matches(method, targetClass)) {
@@ -281,11 +294,14 @@ public abstract class AopUtils {
 	 * @return whether the pointcut can apply on any method
 	 */
 	public static boolean canApply(Advisor advisor, Class<?> targetClass, boolean hasIntroductions) {
+		// 引用通知器
 		if (advisor instanceof IntroductionAdvisor) {
 			return ((IntroductionAdvisor) advisor).getClassFilter().matches(targetClass);
 		}
+		// 是否属于 PointcutAdvisor，切点通知器
 		else if (advisor instanceof PointcutAdvisor) {
 			PointcutAdvisor pca = (PointcutAdvisor) advisor;
+			// 调用canApply()，确认是否支持
 			return canApply(pca.getPointcut(), targetClass, hasIntroductions);
 		}
 		else {
@@ -307,18 +323,24 @@ public abstract class AopUtils {
 			return candidateAdvisors;
 		}
 		List<Advisor> eligibleAdvisors = new ArrayList<>();
+		// 遍历
 		for (Advisor candidate : candidateAdvisors) {
+			// 是否有 IntroductionAdvisor 类型通知器（引用类型通知器，被@DeclareParents注解的）
 			if (candidate instanceof IntroductionAdvisor && canApply(candidate, clazz)) {
 				eligibleAdvisors.add(candidate);
 			}
 		}
+		// 标识
 		boolean hasIntroductions = !eligibleAdvisors.isEmpty();
 		for (Advisor candidate : candidateAdvisors) {
 			if (candidate instanceof IntroductionAdvisor) {
 				// already processed
+				// 已经处理了
 				continue;
 			}
+			// 处理其他的通知器（Before/AfterReturning/AfterThrowing/After/Around）
 			if (canApply(candidate, clazz, hasIntroductions)) {
+				// 加入到可用的通知器集合中
 				eligibleAdvisors.add(candidate);
 			}
 		}
@@ -340,7 +362,9 @@ public abstract class AopUtils {
 
 		// Use reflection to invoke the method.
 		try {
+			// 反射，设置方法可以访问
 			ReflectionUtils.makeAccessible(method);
+			// 反射，调用目标方法
 			return method.invoke(target, args);
 		}
 		catch (InvocationTargetException ex) {

@@ -44,6 +44,7 @@ public class DefaultAdvisorAdapterRegistry implements AdvisorAdapterRegistry, Se
 
 
 	/**
+	 * 创建一个新的 DefaultAdvisorAdapterRegistry，注册默认的 AdvisorAdapter。
 	 * Create a new DefaultAdvisorAdapterRegistry, registering well-known adapters.
 	 */
 	public DefaultAdvisorAdapterRegistry() {
@@ -52,41 +53,59 @@ public class DefaultAdvisorAdapterRegistry implements AdvisorAdapterRegistry, Se
 		registerAdvisorAdapter(new ThrowsAdviceAdapter());
 	}
 
-
+	/**
+	 * 返回给定 advice 的包装类 advisor
+	 *     默认至少支持如下 Advice：
+	 *        org.aopalliance.intercept.MethodInterceptor
+	 *        org.springframework.aop.MethodBeforeAdvice
+	 *        org.springframework.aop.AfterReturningAdvice
+	 *        org.springframework.aop.ThrowsAdvice
+	 */
 	@Override
 	public Advisor wrap(Object adviceObject) throws UnknownAdviceTypeException {
+		// 如果 adviceObject 已经是 Advisor 实例，直接返回
 		if (adviceObject instanceof Advisor) {
 			return (Advisor) adviceObject;
 		}
+		// 如果 adviceObject 不是 Advice 实例，直接抛出异常
 		if (!(adviceObject instanceof Advice)) {
 			throw new UnknownAdviceTypeException(adviceObject);
 		}
 		Advice advice = (Advice) adviceObject;
 		if (advice instanceof MethodInterceptor) {
 			// So well-known it doesn't even need an adapter.
+			// MethodInterceptor 不需要 wrap
 			return new DefaultPointcutAdvisor(advice);
 		}
 		for (AdvisorAdapter adapter : this.adapters) {
 			// Check that it is supported.
+			// 检查 adapter 是否理解此 advice 对象？
+			// 即使用 Advisor 调用 getInterceptors 方法作为参数是否有效？
 			if (adapter.supportsAdvice(advice)) {
 				return new DefaultPointcutAdvisor(advice);
 			}
 		}
+		// 如果上面的条件都不满足，直接抛出异常
 		throw new UnknownAdviceTypeException(advice);
 	}
 
+	// 获取通知器中的拦截器
 	@Override
 	public MethodInterceptor[] getInterceptors(Advisor advisor) throws UnknownAdviceTypeException {
 		List<MethodInterceptor> interceptors = new ArrayList<>(3);
 		Advice advice = advisor.getAdvice();
+		// 1. 如果 advice 是 MethodInterceptor 实例，直接添加到拦截器列表
 		if (advice instanceof MethodInterceptor) {
+			// 通知器中的拦截器添加到集合中
 			interceptors.add((MethodInterceptor) advice);
 		}
+		// 2. 如果存在 adapter可以把 advisor 转换为 MethodInterceptor，也需要添加到拦截器列表
 		for (AdvisorAdapter adapter : this.adapters) {
 			if (adapter.supportsAdvice(advice)) {
 				interceptors.add(adapter.getInterceptor(advisor));
 			}
 		}
+		// 拦截器列表为空，则抛出异常
 		if (interceptors.isEmpty()) {
 			throw new UnknownAdviceTypeException(advisor.getAdvice());
 		}

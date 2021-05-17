@@ -46,15 +46,20 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	protected final Log logger = LogFactory.getLog(getClass());
 
 	/** Map from alias to canonical name. */
+	// 从别名映射到规范名称 Map集合
 	private final Map<String, String> aliasMap = new ConcurrentHashMap<>(16);
 
 
+	// 注册类的别名
 	@Override
 	public void registerAlias(String name, String alias) {
 		Assert.hasText(name, "'name' must not be empty");
 		Assert.hasText(alias, "'alias' must not be empty");
+		// 加锁
 		synchronized (this.aliasMap) {
+			// 别名是否已经存在
 			if (alias.equals(name)) {
+				// 移除别名
 				this.aliasMap.remove(alias);
 				if (logger.isDebugEnabled()) {
 					logger.debug("Alias definition '" + alias + "' ignored since it points to same name");
@@ -76,7 +81,9 @@ public class SimpleAliasRegistry implements AliasRegistry {
 								registeredName + "' with new target name '" + name + "'");
 					}
 				}
+				// 检查别名是否被循环引用了
 				checkForAliasCircle(name, alias);
+				// 别名集合中存入别名
 				this.aliasMap.put(alias, name);
 				if (logger.isTraceEnabled()) {
 					logger.trace("Alias definition '" + alias + "' registered for name '" + name + "'");
@@ -193,6 +200,7 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	 * @see #registerAlias
 	 * @see #hasAlias
 	 */
+	// 检查给定名称是否作为别名指向给定别名已经在另一个方向了，在前面捕捉一个循环引用
 	protected void checkForAliasCircle(String name, String alias) {
 		if (hasAlias(alias, name)) {
 			throw new IllegalStateException("Cannot register alias '" + alias +
@@ -206,13 +214,31 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	 * @param name the user-specified name
 	 * @return the transformed name
 	 */
+	/**
+	 * 解析bean 的别名
+	 * @param name bean传入的名称
+	 * @return 返回的名称
+	 */
 	public String canonicalName(String name) {
 		String canonicalName = name;
 		// Handle aliasing...
+		/**
+		 * 这里使用 while 循环进行处理，原因是：可能会存在多重别名的问题，即别名指向别名。比如下面
+		 * 的配置：
+		 *   <bean id="tulingDao" class="com.tuling.mapper.tulingDao"/>
+		 *   <alias name="tulingDao" alias="aliasA"/>
+		 *   <alias name="aliasA" alias="aliasB"/>
+		 *
+		 * 上面的别名指向关系为 aliasB -> aliasA -> tulingDao，对于上面的别名配置，aliasMap 中数据
+		 * 视图为：aliasMap = [<aliasB, aliasA>, <aliasA, tulingDao>]。通过下面的循环解析别名
+		 * aliasB 最终指向的 beanName
+		 */
 		String resolvedName;
 		do {
+			// 获取bean的真实名称
 			resolvedName = this.aliasMap.get(canonicalName);
 			if (resolvedName != null) {
+				// 赋值给 canonicalName属性
 				canonicalName = resolvedName;
 			}
 		}

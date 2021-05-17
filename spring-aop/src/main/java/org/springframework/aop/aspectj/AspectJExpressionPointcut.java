@@ -174,13 +174,17 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 
 	@Override
 	public ClassFilter getClassFilter() {
+		// 获取切点表达式
 		obtainPointcutExpression();
+		// 将自身返回
 		return this;
 	}
 
 	@Override
 	public MethodMatcher getMethodMatcher() {
+		// 获取切点表达式
 		obtainPointcutExpression();
+		// 将自身返回
 		return this;
 	}
 
@@ -194,7 +198,9 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 			throw new IllegalStateException("Must set property 'expression' before attempting to match");
 		}
 		if (this.pointcutExpression == null) {
+			// 类加载器
 			this.pointcutClassLoader = determinePointcutClassLoader();
+			// 切点表达式
 			this.pointcutExpression = buildPointcutExpression(this.pointcutClassLoader);
 		}
 		return this.pointcutExpression;
@@ -215,20 +221,27 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 	}
 
 	/**
+	 * 构建AspectJ切点表达式
 	 * Build the underlying AspectJ pointcut expression.
 	 */
 	private PointcutExpression buildPointcutExpression(@Nullable ClassLoader classLoader) {
+		// 初始化切点解析器
 		PointcutParser parser = initializePointcutParser(classLoader);
+		// 切点参数
 		PointcutParameter[] pointcutParameters = new PointcutParameter[this.pointcutParameterNames.length];
 		for (int i = 0; i < pointcutParameters.length; i++) {
+			// 创建切点参数
 			pointcutParameters[i] = parser.createPointcutParameter(
 					this.pointcutParameterNames[i], this.pointcutParameterTypes[i]);
 		}
+		// 解析AspectJ切点表达式，返回一个切点表达式对象 PointcutExpression（方法是AspectJ代码）
 		return parser.parsePointcutExpression(replaceBooleanOperators(resolveExpression()),
 				this.pointcutDeclarationScope, pointcutParameters);
 	}
 
+	// 解析表达式
 	private String resolveExpression() {
+		// 获取表达式
 		String expression = getExpression();
 		Assert.state(expression != null, "No expression set");
 		return expression;
@@ -238,9 +251,11 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 	 * Initialize the underlying AspectJ pointcut parser.
 	 */
 	private PointcutParser initializePointcutParser(@Nullable ClassLoader classLoader) {
+		// 创建一个切点表达式解析器
 		PointcutParser parser = PointcutParser
 				.getPointcutParserSupportingSpecifiedPrimitivesAndUsingSpecifiedClassLoaderForResolution(
 						SUPPORTED_PRIMITIVES, classLoader);
+		// 注册切点指示符处理器
 		parser.registerPointcutDesignatorHandler(new BeanPointcutDesignatorHandler());
 		return parser;
 	}
@@ -269,9 +284,11 @@ public class AspectJExpressionPointcut extends AbstractExpressionPointcut
 
 	@Override
 	public boolean matches(Class<?> targetClass) {
+		// 获取切点表达式对象
 		PointcutExpression pointcutExpression = obtainPointcutExpression();
 		try {
 			try {
+				// 同过切点表达式targetClass是否符合（AspectJ代码）
 				return pointcutExpression.couldMatchJoinPointsInType(targetClass);
 			}
 			catch (ReflectionWorldException ex) {

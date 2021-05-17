@@ -75,16 +75,20 @@ public abstract class AbstractAspectJAdvisorFactory implements AspectJAdvisorFac
 	 * is that aspects written in the code-style (AspectJ language) also have the annotation present
 	 * when compiled by ajc with the -1.5 flag, yet they cannot be consumed by Spring AOP.
 	 */
+	// 是否是切面
 	@Override
 	public boolean isAspect(Class<?> clazz) {
+		// 包含切面注解 && 不是AspectJ 代码
 		return (hasAspectAnnotation(clazz) && !compiledByAjc(clazz));
 	}
 
+	// 是否包含切面注解
 	private boolean hasAspectAnnotation(Class<?> clazz) {
 		return (AnnotationUtils.findAnnotation(clazz, Aspect.class) != null);
 	}
 
 	/**
+	 * 检查是否是 AspectJ 代码
 	 * We need to detect this as "code-style" AspectJ aspects should not be
 	 * interpreted by Spring AOP.
 	 */
@@ -93,6 +97,7 @@ public abstract class AbstractAspectJAdvisorFactory implements AspectJAdvisorFac
 		// annotation-style aspects. Therefore there is no 'clean' way to tell them apart. Here we rely on
 		// an implementation detail of the AspectJ compiler.
 		for (Field field : clazz.getDeclaredFields()) {
+			// AspectJ 代码字段 会以 "ajc$" 开头
 			if (field.getName().startsWith(AJC_MAGIC)) {
 				return true;
 			}
@@ -130,7 +135,10 @@ public abstract class AbstractAspectJAdvisorFactory implements AspectJAdvisorFac
 	@SuppressWarnings("unchecked")
 	@Nullable
 	protected static AspectJAnnotation<?> findAspectJAnnotationOnMethod(Method method) {
+		// Pointcut.class, Around.class, Before.class, After.class, AfterReturning.class, AfterThrowing.class
+		// 遍历AspectJ 注解Class
 		for (Class<?> clazz : ASPECTJ_ANNOTATION_CLASSES) {
+			//
 			AspectJAnnotation<?> foundAnnotation = findAnnotation(method, (Class<Annotation>) clazz);
 			if (foundAnnotation != null) {
 				return foundAnnotation;

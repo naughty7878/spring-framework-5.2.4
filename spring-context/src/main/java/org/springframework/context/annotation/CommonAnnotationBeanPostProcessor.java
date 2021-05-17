@@ -200,7 +200,7 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 
 	@Nullable
 	private transient StringValueResolver embeddedValueResolver;
-
+	// 注入元信息缓存
 	private final transient Map<String, InjectionMetadata> injectionMetadataCache = new ConcurrentHashMap<>(256);
 
 
@@ -304,10 +304,13 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 		}
 	}
 
-
+	// 后置处理合并Bean定义
 	@Override
 	public void postProcessMergedBeanDefinition(RootBeanDefinition beanDefinition, Class<?> beanType, String beanName) {
+		// 后置处理合并Bean定义
+		// 主要是：查找或构建一个生命周期元数据对象
 		super.postProcessMergedBeanDefinition(beanDefinition, beanType, beanName);
+		// 查找或构建一个资源元数据对象（注入信息元数据对象）
 		InjectionMetadata metadata = findResourceMetadata(beanName, beanType, null);
 		metadata.checkConfigMembers(beanDefinition);
 	}
@@ -329,6 +332,7 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 
 	@Override
 	public PropertyValues postProcessProperties(PropertyValues pvs, Object bean, String beanName) {
+		// 找的资源元信息
 		InjectionMetadata metadata = findResourceMetadata(beanName, bean.getClass(), pvs);
 		try {
 			metadata.inject(bean, beanName, pvs);
@@ -347,7 +351,8 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 		return postProcessProperties(pvs, bean, beanName);
 	}
 
-
+	// 查找资源元数据对象，没有的话根据clazz构建一个
+	// 返回注入元数据
 	private InjectionMetadata findResourceMetadata(String beanName, final Class<?> clazz, @Nullable PropertyValues pvs) {
 		// Fall back to class name as cache key, for backwards compatibility with custom callers.
 		String cacheKey = (StringUtils.hasLength(beanName) ? beanName : clazz.getName());
@@ -367,7 +372,7 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 		}
 		return metadata;
 	}
-
+	// 根据clazz，根据一个资源元数据对象
 	private InjectionMetadata buildResourceMetadata(final Class<?> clazz) {
 		if (!AnnotationUtils.isCandidateClass(clazz, resourceAnnotationTypes)) {
 			return InjectionMetadata.EMPTY;
@@ -408,6 +413,7 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 					return;
 				}
 				if (method.equals(ClassUtils.getMostSpecificMethod(method, clazz))) {
+					// webServiceRefClass 在类静态快中赋值
 					if (webServiceRefClass != null && bridgedMethod.isAnnotationPresent(webServiceRefClass)) {
 						if (Modifier.isStatic(method.getModifiers())) {
 							throw new IllegalStateException("@WebServiceRef annotation is not supported on static methods");

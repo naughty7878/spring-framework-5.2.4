@@ -56,27 +56,35 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 		return currentlyInvokedFactoryMethod.get();
 	}
 
-
+	// 实例化对象
 	@Override
 	public Object instantiate(RootBeanDefinition bd, @Nullable String beanName, BeanFactory owner) {
 		// Don't override the class with CGLIB if no overrides.
+		// 是否有方法注入
 		if (!bd.hasMethodOverrides()) {
 			Constructor<?> constructorToUse;
+			// 加锁
 			synchronized (bd.constructorArgumentLock) {
+				// 从Bean定义中获取可以使用的构造器
 				constructorToUse = (Constructor<?>) bd.resolvedConstructorOrFactoryMethod;
+				// 构造器为空
 				if (constructorToUse == null) {
 					final Class<?> clazz = bd.getBeanClass();
+					// 有clazz对象判断是否是接口
 					if (clazz.isInterface()) {
 						throw new BeanInstantiationException(clazz, "Specified class is an interface");
 					}
 					try {
+						// 获取系统安全管理器
 						if (System.getSecurityManager() != null) {
 							constructorToUse = AccessController.doPrivileged(
 									(PrivilegedExceptionAction<Constructor<?>>) clazz::getDeclaredConstructor);
 						}
 						else {
+							// 通过类的clazz对象获取构造器
 							constructorToUse = clazz.getDeclaredConstructor();
 						}
+						// 并将构造器赋值给bean定时的属性
 						bd.resolvedConstructorOrFactoryMethod = constructorToUse;
 					}
 					catch (Throwable ex) {
@@ -84,6 +92,7 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 					}
 				}
 			}
+			// 通过构造器实例化对象
 			return BeanUtils.instantiateClass(constructorToUse);
 		}
 		else {
@@ -133,6 +142,7 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 		throw new UnsupportedOperationException("Method Injection not supported in SimpleInstantiationStrategy");
 	}
 
+	// 根据工厂方法，实例化对象
 	@Override
 	public Object instantiate(RootBeanDefinition bd, @Nullable String beanName, BeanFactory owner,
 			@Nullable Object factoryBean, final Method factoryMethod, Object... args) {
@@ -145,12 +155,14 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 				});
 			}
 			else {
+				// 反射设置方法访问权限
 				ReflectionUtils.makeAccessible(factoryMethod);
 			}
 
 			Method priorInvokedFactoryMethod = currentlyInvokedFactoryMethod.get();
 			try {
 				currentlyInvokedFactoryMethod.set(factoryMethod);
+				// 调用工厂方法实例化对象
 				Object result = factoryMethod.invoke(factoryBean, args);
 				if (result == null) {
 					result = new NullBean();

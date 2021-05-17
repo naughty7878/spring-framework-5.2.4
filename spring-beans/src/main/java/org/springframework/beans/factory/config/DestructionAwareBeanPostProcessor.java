@@ -30,6 +30,7 @@ import org.springframework.beans.BeansException;
 public interface DestructionAwareBeanPostProcessor extends BeanPostProcessor {
 
 	/**
+	 * 在容器关闭时销毁前处理
 	 * Apply this BeanPostProcessor to the given bean instance before its
 	 * destruction, e.g. invoking custom destruction callbacks.
 	 * <p>Like DisposableBean's {@code destroy} and a custom destroy method, this
@@ -44,6 +45,7 @@ public interface DestructionAwareBeanPostProcessor extends BeanPostProcessor {
 	void postProcessBeforeDestruction(Object bean, String beanName) throws BeansException;
 
 	/**
+	 * 判断是否需要在容器关闭时销毁处理
 	 * Determine whether the given bean instance requires destruction by this
 	 * post-processor.
 	 * <p>The default implementation returns {@code true}. If a pre-5 implementation

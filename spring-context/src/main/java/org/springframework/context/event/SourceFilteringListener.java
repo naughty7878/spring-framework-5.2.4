@@ -38,6 +38,7 @@ public class SourceFilteringListener implements GenericApplicationListener, Smar
 
 	private final Object source;
 
+	// 委派监听器
 	@Nullable
 	private GenericApplicationListener delegate;
 
@@ -66,10 +67,13 @@ public class SourceFilteringListener implements GenericApplicationListener, Smar
 		this.source = source;
 	}
 
-
+	// 容器完成刷新，会发布刷新事件
+	// 即触发此资源过滤监听器的方法
 	@Override
 	public void onApplicationEvent(ApplicationEvent event) {
+		//  this.source  ==> WebApplicationContext for namespace 'spring-servlet', started on Wed Apr 28 18:20:47 CST 2021, parent: Root WebApplicationContext
 		if (event.getSource() == this.source) {
+			// 触发应用内部事件方法
 			onApplicationEventInternal(event);
 		}
 	}
@@ -106,6 +110,8 @@ public class SourceFilteringListener implements GenericApplicationListener, Smar
 			throw new IllegalStateException(
 					"Must specify a delegate object or override the onApplicationEventInternal method");
 		}
+		// 由委派监听器处理
+		// FrameworkServlet$ContextRefreshListener@69b37f5c
 		this.delegate.onApplicationEvent(event);
 	}
 

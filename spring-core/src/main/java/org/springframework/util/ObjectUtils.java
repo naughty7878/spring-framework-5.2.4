@@ -607,11 +607,14 @@ public abstract class ObjectUtils {
 	 * @return the object's identity as String representation,
 	 * or an empty String if the object was {@code null}
 	 */
+	// 返回对象整体标识的字符串表示形式。
 	public static String identityToString(@Nullable Object obj) {
 		if (obj == null) {
 			return EMPTY_STRING;
 		}
+		// 对象类名
 		String className = obj.getClass().getName();
+		// 系统哈希计算出来的一个16进制的数值
 		String identityHexString = getIdentityHexString(obj);
 		return className + '@' + identityHexString;
 	}

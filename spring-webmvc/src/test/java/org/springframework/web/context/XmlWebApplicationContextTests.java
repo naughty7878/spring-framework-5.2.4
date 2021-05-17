@@ -51,15 +51,19 @@ public class XmlWebApplicationContextTests extends AbstractApplicationContextTes
 	@Override
 	protected ConfigurableApplicationContext createContext() throws Exception {
 		InitAndIB.constructed = false;
+		// 新建一个XmlWeb的应用上下文
 		root = new XmlWebApplicationContext();
 		root.getEnvironment().addActiveProfile("rootProfile1");
 		MockServletContext sc = new MockServletContext("");
 		root.setServletContext(sc);
 		root.setConfigLocations(new String[] {"/org/springframework/web/context/WEB-INF/applicationContext.xml"});
+		// 添加bean工厂后置处理器
 		root.addBeanFactoryPostProcessor(new BeanFactoryPostProcessor() {
 			@Override
 			public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
+				// 添加Bean后置处理器
 				beanFactory.addBeanPostProcessor(new BeanPostProcessor() {
+					// 初始化之前后置处理
 					@Override
 					public Object postProcessBeforeInitialization(Object bean, String name) throws BeansException {
 						if (bean instanceof TestBean) {
@@ -67,6 +71,7 @@ public class XmlWebApplicationContextTests extends AbstractApplicationContextTes
 						}
 						return bean;
 					}
+					// 初始化之后后置处理
 					@Override
 					public Object postProcessAfterInitialization(Object bean, String name) throws BeansException {
 						return bean;
@@ -74,7 +79,9 @@ public class XmlWebApplicationContextTests extends AbstractApplicationContextTes
 				});
 			}
 		});
+		// 刷新容器
 		root.refresh();
+		// 新建一个XmlWeb的应用上下文
 		XmlWebApplicationContext wac = new XmlWebApplicationContext();
 		wac.getEnvironment().addActiveProfile("wacProfile1");
 		wac.setParent(root);

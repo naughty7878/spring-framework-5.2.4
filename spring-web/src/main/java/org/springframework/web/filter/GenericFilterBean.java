@@ -210,21 +210,29 @@ public abstract class GenericFilterBean implements Filter, BeanNameAware, Enviro
 	@Override
 	public final void init(FilterConfig filterConfig) throws ServletException {
 		Assert.notNull(filterConfig, "FilterConfig must not be null");
-
+		// 过滤器配置
 		this.filterConfig = filterConfig;
 
 		// Set bean properties from init parameters.
+		// 从配置中，获取过滤器的属性值
 		PropertyValues pvs = new FilterConfigPropertyValues(filterConfig, this.requiredProperties);
 		if (!pvs.isEmpty()) {
 			try {
+				// 包装了过滤器
 				BeanWrapper bw = PropertyAccessorFactory.forBeanPropertyAccess(this);
+				// 得到资源加载器
 				ResourceLoader resourceLoader = new ServletContextResourceLoader(filterConfig.getServletContext());
+				// 过滤器环境（为空）
 				Environment env = this.environment;
 				if (env == null) {
+					// 创建一个标准的Servlet环境
 					env = new StandardServletEnvironment();
 				}
+				// 注册自定义的资源编辑器
 				bw.registerCustomEditor(Resource.class, new ResourceEditor(resourceLoader, env));
+				// 初始化过滤器的包装对象
 				initBeanWrapper(bw);
+				// 设置属性
 				bw.setPropertyValues(pvs, true);
 			}
 			catch (BeansException ex) {

@@ -69,6 +69,7 @@ public class FailFastProblemReporter implements ProblemReporter {
 	 */
 	@Override
 	public void error(Problem problem) {
+		// 抛出bean定义解析异常
 		throw new BeanDefinitionParsingException(problem);
 	}
 

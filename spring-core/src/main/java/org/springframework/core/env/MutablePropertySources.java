@@ -41,6 +41,7 @@ import org.springframework.lang.Nullable;
  */
 public class MutablePropertySources implements PropertySources {
 
+	// 属性源集合
 	private final List<PropertySource<?>> propertySourceList = new CopyOnWriteArrayList<>();
 
 
@@ -112,8 +113,11 @@ public class MutablePropertySources implements PropertySources {
 	 */
 	public void addBefore(String relativePropertySourceName, PropertySource<?> propertySource) {
 		assertLegalRelativeAddition(relativePropertySourceName, propertySource);
+		// 属性属性源
 		removeIfPresent(propertySource);
+		// 获取相对属性源名称的下标
 		int index = assertPresentAndGetIndex(relativePropertySourceName);
+		// 在下标处插入属性源
 		addAtIndex(index, propertySource);
 	}
 
@@ -192,6 +196,7 @@ public class MutablePropertySources implements PropertySources {
 	 */
 	private void addAtIndex(int index, PropertySource<?> propertySource) {
 		removeIfPresent(propertySource);
+		// 在下标处插入属性源
 		this.propertySourceList.add(index, propertySource);
 	}
 

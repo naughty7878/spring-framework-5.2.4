@@ -342,13 +342,17 @@ public class ReactiveAdapterRegistry {
 
 	private static class CoroutinesRegistrar {
 
+		private static Object apply(Publisher<?> source) {
+			return CoroutinesUtils.monoToDeferred(Mono.from(source));
+		}
+
 		@SuppressWarnings("KotlinInternalInJava")
 		void registerAdapters(ReactiveAdapterRegistry registry) {
 			registry.registerReactiveType(
 					ReactiveTypeDescriptor.singleOptionalValue(Deferred.class,
 							() -> CompletableDeferredKt.CompletableDeferred(null)),
 					source -> CoroutinesUtils.deferredToMono((Deferred<?>) source),
-					source -> CoroutinesUtils.monoToDeferred(Mono.from(source)));
+					CoroutinesRegistrar::apply);
 
 			registry.registerReactiveType(
 					ReactiveTypeDescriptor.multiValue(kotlinx.coroutines.flow.Flow.class, kotlinx.coroutines.flow.FlowKt::emptyFlow),

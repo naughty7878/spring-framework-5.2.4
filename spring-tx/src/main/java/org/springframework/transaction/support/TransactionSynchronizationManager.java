@@ -77,22 +77,23 @@ import org.springframework.util.Assert;
 public abstract class TransactionSynchronizationManager {
 
 	private static final Log logger = LogFactory.getLog(TransactionSynchronizationManager.class);
-
+	// 事务资源的线程缓存
 	private static final ThreadLocal<Map<Object, Object>> resources =
 			new NamedThreadLocal<>("Transactional resources");
 
+	// 线程缓存中的同步对象集合（可以注册同步对象到集合中，在事务提交的时候，会调用对象的方法）
 	private static final ThreadLocal<Set<TransactionSynchronization>> synchronizations =
 			new NamedThreadLocal<>("Transaction synchronizations");
-
+	// 当前事务事务名称线程缓存
 	private static final ThreadLocal<String> currentTransactionName =
 			new NamedThreadLocal<>("Current transaction name");
-
+	// 当前事务只读模式线程缓存
 	private static final ThreadLocal<Boolean> currentTransactionReadOnly =
 			new NamedThreadLocal<>("Current transaction read-only status");
-
+	// 当前事务隔离级别线程缓存
 	private static final ThreadLocal<Integer> currentTransactionIsolationLevel =
 			new NamedThreadLocal<>("Current transaction isolation level");
-
+	// 实际事务活跃线程缓存
 	private static final ThreadLocal<Boolean> actualTransactionActive =
 			new NamedThreadLocal<>("Actual transaction active");
 
@@ -136,7 +137,10 @@ public abstract class TransactionSynchronizationManager {
 	 */
 	@Nullable
 	public static Object getResource(Object key) {
+		// 看看数据源连接池有没有扩展，一般没有
+		// 解包数据源，得到真正的数据源
 		Object actualKey = TransactionSynchronizationUtils.unwrapResourceIfNecessary(key);
+		// 从数据，去获取资源
 		Object value = doGetResource(actualKey);
 		if (value != null && logger.isTraceEnabled()) {
 			logger.trace("Retrieved value [" + value + "] for key [" + actualKey + "] bound to thread [" +
@@ -150,10 +154,13 @@ public abstract class TransactionSynchronizationManager {
 	 */
 	@Nullable
 	private static Object doGetResource(Object actualKey) {
+		// 从线程的事务资源缓存中获取 当前线程绑定的<数据源,连接> 资源
 		Map<Object, Object> map = resources.get();
 		if (map == null) {
+			// 事务资源缓存，没有则返回
 			return null;
 		}
+		// 获取连接
 		Object value = map.get(actualKey);
 		// Transparently remove ResourceHolder that was marked as void...
 		if (value instanceof ResourceHolder && ((ResourceHolder) value).isVoid()) {
@@ -183,6 +190,7 @@ public abstract class TransactionSynchronizationManager {
 			map = new HashMap<>();
 			resources.set(map);
 		}
+		// (数据源,连接) 因为Spring可以有多个数据源
 		Object oldValue = map.put(actualKey, value);
 		// Transparently suppress a ResourceHolder that was marked as void...
 		if (oldValue instanceof ResourceHolder && ((ResourceHolder) oldValue).isVoid()) {
@@ -207,6 +215,7 @@ public abstract class TransactionSynchronizationManager {
 	 */
 	public static Object unbindResource(Object key) throws IllegalStateException {
 		Object actualKey = TransactionSynchronizationUtils.unwrapResourceIfNecessary(key);
+		// 去解绑资源，（返回资源-实际上就是一个连接持有者）
 		Object value = doUnbindResource(actualKey);
 		if (value == null) {
 			throw new IllegalStateException(
@@ -227,6 +236,7 @@ public abstract class TransactionSynchronizationManager {
 	}
 
 	/**
+	 * 解绑资源
 	 * Actually remove the value of the resource that is bound for the given key.
 	 */
 	@Nullable
@@ -235,6 +245,7 @@ public abstract class TransactionSynchronizationManager {
 		if (map == null) {
 			return null;
 		}
+		// 移除资源
 		Object value = map.remove(actualKey);
 		// Remove entire ThreadLocal if empty...
 		if (map.isEmpty()) {
@@ -275,6 +286,7 @@ public abstract class TransactionSynchronizationManager {
 			throw new IllegalStateException("Cannot activate transaction synchronization - already active");
 		}
 		logger.trace("Initializing transaction synchronization");
+		// 初始化线程缓存中的同步集合
 		synchronizations.set(new LinkedHashSet<>());
 	}
 

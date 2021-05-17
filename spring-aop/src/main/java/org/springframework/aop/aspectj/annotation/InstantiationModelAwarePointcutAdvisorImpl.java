@@ -121,6 +121,7 @@ final class InstantiationModelAwarePointcutAdvisorImpl
 	 */
 	@Override
 	public Pointcut getPointcut() {
+		// 获取切入点
 		return this.pointcut;
 	}
 

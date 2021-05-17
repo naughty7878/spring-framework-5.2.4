@@ -72,6 +72,7 @@ public abstract class BeanFactoryUtils {
 	}
 
 	/**
+	 * 去除工厂Bean的前缀(&)
 	 * Return the actual bean name, stripping out the factory dereference
 	 * prefix (if any, also stripping repeated factory prefixes if found).
 	 * @param name the name of the bean
@@ -83,6 +84,8 @@ public abstract class BeanFactoryUtils {
 		if (!name.startsWith(BeanFactory.FACTORY_BEAN_PREFIX)) {
 			return name;
 		}
+		// 判断当前的beanName是不是工厂Bean  若是的话去除工厂bean的前缀(&)
+		// computeIfAbsent()， Map集合中的方法，如果不存在，就是用计算值（即：传入进去的Lambda表达式函数来计算）
 		return transformedBeanNameCache.computeIfAbsent(name, beanName -> {
 			do {
 				beanName = beanName.substring(BeanFactory.FACTORY_BEAN_PREFIX.length());
@@ -262,6 +265,7 @@ public abstract class BeanFactoryUtils {
 			ListableBeanFactory lbf, Class<?> type, boolean includeNonSingletons, boolean allowEagerInit) {
 
 		Assert.notNull(lbf, "ListableBeanFactory must not be null");
+		// 根据类型从bean工厂的bean定义中，获取bean定义名单
 		String[] result = lbf.getBeanNamesForType(type, includeNonSingletons, allowEagerInit);
 		if (lbf instanceof HierarchicalBeanFactory) {
 			HierarchicalBeanFactory hbf = (HierarchicalBeanFactory) lbf;

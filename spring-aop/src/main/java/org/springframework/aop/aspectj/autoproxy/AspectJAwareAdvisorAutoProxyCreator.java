@@ -46,6 +46,7 @@ import org.springframework.util.ClassUtils;
 @SuppressWarnings("serial")
 public class AspectJAwareAdvisorAutoProxyCreator extends AbstractAdvisorAutoProxyCreator {
 
+	// 默认优先级排序器
 	private static final Comparator<Advisor> DEFAULT_PRECEDENCE_COMPARATOR = new AspectJPrecedenceComparator();
 
 
@@ -67,17 +68,22 @@ public class AspectJAwareAdvisorAutoProxyCreator extends AbstractAdvisorAutoProx
 	@Override
 	@SuppressWarnings("unchecked")
 	protected List<Advisor> sortAdvisors(List<Advisor> advisors) {
+		// 部分比较通知器 集合
 		List<PartiallyComparableAdvisorHolder> partiallyComparableAdvisors = new ArrayList<>(advisors.size());
 		for (Advisor element : advisors) {
 			partiallyComparableAdvisors.add(
+					// 使用默认的优先级排序器
 					new PartiallyComparableAdvisorHolder(element, DEFAULT_PRECEDENCE_COMPARATOR));
 		}
+		// 排序
 		List<PartiallyComparableAdvisorHolder> sorted = PartialOrder.sort(partiallyComparableAdvisors);
 		if (sorted != null) {
 			List<Advisor> result = new ArrayList<>(advisors.size());
 			for (PartiallyComparableAdvisorHolder pcAdvisor : sorted) {
+				// 添加到集合中
 				result.add(pcAdvisor.getAdvisor());
 			}
+			// 返回
 			return result;
 		}
 		else {
@@ -92,19 +98,25 @@ public class AspectJAwareAdvisorAutoProxyCreator extends AbstractAdvisorAutoProx
 	 */
 	@Override
 	protected void extendAdvisors(List<Advisor> candidateAdvisors) {
+		// 构建通知器调用链
 		AspectJProxyUtils.makeAdvisorChainAspectJCapableIfNecessary(candidateAdvisors);
 	}
 
 	@Override
 	protected boolean shouldSkip(Class<?> beanClass, String beanName) {
 		// TODO: Consider optimization by caching the list of the aspect names
+		// 获取可用的通知器
 		List<Advisor> candidateAdvisors = findCandidateAdvisors();
+		// 遍历
 		for (Advisor advisor : candidateAdvisors) {
+			// 如果通知器是 切点通知器 && bean的名称相同
 			if (advisor instanceof AspectJPointcutAdvisor &&
 					((AspectJPointcutAdvisor) advisor).getAspectName().equals(beanName)) {
+				// 跳过
 				return true;
 			}
 		}
+		// 调用父方法判断（父方法，是根据原实例对象，还是代理对象，来判断是否跳过）
 		return super.shouldSkip(beanClass, beanName);
 	}
 

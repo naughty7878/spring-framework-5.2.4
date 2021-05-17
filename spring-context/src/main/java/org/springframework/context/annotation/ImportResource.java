@@ -75,6 +75,7 @@ public @interface ImportResource {
 	@AliasFor("value")
 	String[] locations() default {};
 
+
 	/**
 	 * {@link BeanDefinitionReader} implementation to use when processing
 	 * resources specified via the {@link #value} attribute.
@@ -86,5 +87,4 @@ public @interface ImportResource {
 	 * @see #value
 	 */
 	Class<? extends BeanDefinitionReader> reader() default BeanDefinitionReader.class;
-
 }

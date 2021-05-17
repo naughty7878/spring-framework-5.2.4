@@ -191,7 +191,9 @@ public final class ModelFactory {
 		else {
 			this.sessionAttributesHandler.storeAttributes(request, defaultModel);
 		}
+		// 判断请求是否已经被非完全处理了 && 容器模型就是默认模型
 		if (!container.isRequestHandled() && container.getModel() == defaultModel) {
+			// 更新绑定结果
 			updateBindingResult(request, defaultModel);
 		}
 	}

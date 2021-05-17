@@ -61,6 +61,7 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	private AnnotatedElement qualifiedElement;
 
 	/** Determines if the definition needs to be re-merged. */
+	// 是否需要重新合并Bean定义，默认false
 	volatile boolean stale;
 
 	boolean allowCaching = true;
@@ -71,6 +72,7 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	volatile ResolvableType targetType;
 
 	/** Package-visible field for caching the determined Class of a given bean definition. */
+	// 解析对应的bean的类型
 	@Nullable
 	volatile Class<?> resolvedTargetType;
 
@@ -83,10 +85,12 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	volatile ResolvableType factoryMethodReturnType;
 
 	/** Package-visible field for caching a unique factory method candidate for introspection. */
+	// 设置解析工厂方法
 	@Nullable
 	volatile Method factoryMethodToIntrospect;
 
 	/** Common lock for the four constructor fields below. */
+	// 构造参数锁
 	final Object constructorArgumentLock = new Object();
 
 	/** Package-visible field for caching the resolved constructor or factory method. */
@@ -108,6 +112,7 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	final Object postProcessingLock = new Object();
 
 	/** Package-visible field that indicates MergedBeanDefinitionPostProcessor having been applied. */
+	// 包可见字段，指示已应用MergedBeanDefinitionPostProcessor
 	boolean postProcessed = false;
 
 	/** Package-visible field that indicates a before-instantiation post-processor having kicked in. */
@@ -379,6 +384,7 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	 */
 	public void setUniqueFactoryMethodName(String name) {
 		Assert.hasText(name, "Factory method name must not be empty");
+		// 设置工厂方法名
 		setFactoryMethodName(name);
 		this.isFactoryMethodUnique = true;
 	}

@@ -74,10 +74,12 @@ public abstract class AbstractCachingViewResolver extends WebApplicationObjectSu
 	private CacheFilter cacheFilter = DEFAULT_CACHE_FILTER;
 
 	/** Fast access cache for Views, returning already cached instances without a global lock. */
+	// 视图访问缓存
 	private final Map<Object, View> viewAccessCache = new ConcurrentHashMap<>(DEFAULT_CACHE_LIMIT);
 
 	/** Map from view key to View instance, synchronized for View creation. */
 	@SuppressWarnings("serial")
+	// 视图创建缓存
 	private final Map<Object, View> viewCreationCache =
 			new LinkedHashMap<Object, View>(DEFAULT_CACHE_LIMIT, 0.75f, true) {
 				@Override
@@ -174,10 +176,13 @@ public abstract class AbstractCachingViewResolver extends WebApplicationObjectSu
 			return createView(viewName, locale);
 		}
 		else {
+			// 缓存key
 			Object cacheKey = getCacheKey(viewName, locale);
+			// 视图访问缓存
 			View view = this.viewAccessCache.get(cacheKey);
 			if (view == null) {
 				synchronized (this.viewCreationCache) {
+					// 视图创建缓存
 					view = this.viewCreationCache.get(cacheKey);
 					if (view == null) {
 						// Ask the subclass to create the View object.
@@ -272,6 +277,7 @@ public abstract class AbstractCachingViewResolver extends WebApplicationObjectSu
 	 */
 	@Nullable
 	protected View createView(String viewName, Locale locale) throws Exception {
+		// 加载视图
 		return loadView(viewName, locale);
 	}
 

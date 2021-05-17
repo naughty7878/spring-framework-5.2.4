@@ -202,6 +202,7 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 	 */
 	@Override
 	public void afterPropertiesSet() {
+		// 初始化处理器方法
 		initHandlerMethods();
 	}
 
@@ -212,8 +213,10 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 	 * @see #handlerMethodsInitialized
 	 */
 	protected void initHandlerMethods() {
+		// 从容器中获取可用Bean名单
 		for (String beanName : getCandidateBeanNames()) {
 			if (!beanName.startsWith(SCOPED_TARGET_NAME_PREFIX)) {
+				// 根据Bean名，处理可用Bean
 				processCandidateBean(beanName);
 			}
 		}
@@ -228,6 +231,7 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 	 */
 	protected String[] getCandidateBeanNames() {
 		return (this.detectHandlerMethodsInAncestorContexts ?
+				// 从Bean工厂中获取所有beanName
 				BeanFactoryUtils.beanNamesForTypeIncludingAncestors(obtainApplicationContext(), Object.class) :
 				obtainApplicationContext().getBeanNamesForType(Object.class));
 	}
@@ -246,6 +250,7 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 	protected void processCandidateBean(String beanName) {
 		Class<?> beanType = null;
 		try {
+			// 获取Bean的Class
 			beanType = obtainApplicationContext().getType(beanName);
 		}
 		catch (Throwable ex) {
@@ -255,6 +260,7 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 			}
 		}
 		if (beanType != null && isHandler(beanType)) {
+			// 查询处理器方法(@RequestMapping 注解的方法)
 			detectHandlerMethods(beanName);
 		}
 	}
@@ -265,11 +271,13 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 	 * @see #getMappingForMethod
 	 */
 	protected void detectHandlerMethods(Object handler) {
+		// 获取处理器的Class
 		Class<?> handlerType = (handler instanceof String ?
 				obtainApplicationContext().getType((String) handler) : handler.getClass());
 
 		if (handlerType != null) {
 			Class<?> userType = ClassUtils.getUserClass(handlerType);
+			// 获取@RequestMapping注解，标注的方法
 			Map<Method, T> methods = MethodIntrospector.selectMethods(userType,
 					(MethodIntrospector.MetadataLookup<T>) method -> {
 						try {
@@ -283,8 +291,10 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 			if (logger.isTraceEnabled()) {
 				logger.trace(formatMappings(userType, methods));
 			}
+			// 遍历
 			methods.forEach((method, mapping) -> {
 				Method invocableMethod = AopUtils.selectInvocableMethod(method, userType);
+				// 注册处理器方法（@RequestMapping注解的方法）
 				registerHandlerMethod(handler, invocableMethod, mapping);
 			});
 		}
@@ -315,6 +325,7 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 	 * under the same mapping
 	 */
 	protected void registerHandlerMethod(Object handler, Method method, T mapping) {
+		// 给对象的映射注册器中，注册方法
 		this.mappingRegistry.register(mapping, handler, method);
 	}
 
@@ -360,14 +371,19 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 	 */
 	@Override
 	protected HandlerMethod getHandlerInternal(HttpServletRequest request) throws Exception {
+		// 获取查找路径
 		String lookupPath = getUrlPathHelper().getLookupPathForRequest(request);
 		request.setAttribute(LOOKUP_PATH, lookupPath);
+		// 加锁
 		this.mappingRegistry.acquireReadLock();
 		try {
+			// 查找处理器方法
 			HandlerMethod handlerMethod = lookupHandlerMethod(lookupPath, request);
+			// 创建解析处理器方法的对象Bean
 			return (handlerMethod != null ? handlerMethod.createWithResolvedBean() : null);
 		}
 		finally {
+			// 解锁
 			this.mappingRegistry.releaseReadLock();
 		}
 	}
@@ -383,9 +399,12 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 	 */
 	@Nullable
 	protected HandlerMethod lookupHandlerMethod(String lookupPath, HttpServletRequest request) throws Exception {
+		// 匹配对象集合
 		List<Match> matches = new ArrayList<>();
+		// 直接路径匹配对象集合
 		List<T> directPathMatches = this.mappingRegistry.getMappingsByUrl(lookupPath);
 		if (directPathMatches != null) {
+			// 将匹配对象添加到集合中
 			addMatchingMappings(directPathMatches, matches, request);
 		}
 		if (matches.isEmpty()) {
@@ -394,8 +413,11 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 		}
 
 		if (!matches.isEmpty()) {
+			// 创建匹配对象比较器
 			Comparator<Match> comparator = new MatchComparator(getMappingComparator(request));
+			// 匹配对象排序
 			matches.sort(comparator);
+			// 得到最佳匹配器
 			Match bestMatch = matches.get(0);
 			if (matches.size() > 1) {
 				if (logger.isTraceEnabled()) {
@@ -413,8 +435,11 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 							"Ambiguous handler methods mapped for '" + uri + "': {" + m1 + ", " + m2 + "}");
 				}
 			}
+			// 设置request属性 handlerMethod
 			request.setAttribute(BEST_MATCHING_HANDLER_ATTRIBUTE, bestMatch.handlerMethod);
+			// 处理匹配
 			handleMatch(bestMatch.mapping, lookupPath, request);
+			// 返回处理器方法
 			return bestMatch.handlerMethod;
 		}
 		else {
@@ -530,7 +555,7 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 	class MappingRegistry {
 
 		private final Map<T, MappingRegistration<T>> registry = new HashMap<>();
-
+		// 映射查找集合
 		private final Map<T, HandlerMethod> mappingLookup = new LinkedHashMap<>();
 
 		private final MultiValueMap<String, T> urlLookup = new LinkedMultiValueMap<>();
@@ -597,6 +622,7 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 			try {
 				HandlerMethod handlerMethod = createHandlerMethod(handler, method);
 				validateMethodMapping(handlerMethod, mapping);
+				// 将处理器方法添加到映射查找集合中
 				this.mappingLookup.put(mapping, handlerMethod);
 
 				List<String> directUrls = getDirectUrls(mapping);

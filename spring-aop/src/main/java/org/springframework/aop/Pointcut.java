@@ -17,6 +17,8 @@
 package org.springframework.aop;
 
 /**
+ *
+ * 一个切入点由 ClassFilter 和 MethodMatcher 组成。
  * Core Spring pointcut abstraction.
  *
  * <p>A pointcut is composed of a {@link ClassFilter} and a {@link MethodMatcher}.

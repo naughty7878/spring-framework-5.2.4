@@ -261,6 +261,7 @@ public class ModelAndViewContainer {
 	}
 
 	/**
+	 * 请求是否已在处理程序中完全处理。
 	 * Whether the request has been handled fully within the handler.
 	 */
 	public boolean isRequestHandled() {

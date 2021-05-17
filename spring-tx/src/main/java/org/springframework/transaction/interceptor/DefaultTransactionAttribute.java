@@ -34,6 +34,7 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 	@Nullable
 	private String qualifier;
 
+	// 事物属性描述：存放了事物属性对应的方法ID
 	@Nullable
 	private String descriptor;
 

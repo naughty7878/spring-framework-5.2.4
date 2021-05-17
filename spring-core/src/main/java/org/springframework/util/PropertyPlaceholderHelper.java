@@ -119,14 +119,17 @@ public class PropertyPlaceholderHelper {
 	 * @param placeholderResolver the {@code PlaceholderResolver} to use for replacement
 	 * @return the supplied value with placeholders replaced inline
 	 */
+	// 解析占位符的值（text="${xx}"）
 	public String replacePlaceholders(String value, PlaceholderResolver placeholderResolver) {
+		// value 不能为空
 		Assert.notNull(value, "'value' must not be null");
+		// 解析字符串的值
 		return parseStringValue(value, placeholderResolver, null);
 	}
-
+	// 解析字符串的值
 	protected String parseStringValue(
 			String value, PlaceholderResolver placeholderResolver, @Nullable Set<String> visitedPlaceholders) {
-
+		// placeholderPrefix == "${"
 		int startIndex = value.indexOf(this.placeholderPrefix);
 		if (startIndex == -1) {
 			return value;
@@ -134,8 +137,10 @@ public class PropertyPlaceholderHelper {
 
 		StringBuilder result = new StringBuilder(value);
 		while (startIndex != -1) {
+			// 查找占位符结束的下标（即找到"}"的下标）
 			int endIndex = findPlaceholderEndIndex(result, startIndex);
 			if (endIndex != -1) {
+				// 截取或者里面的值 "${xx}" ==》 "xx"
 				String placeholder = result.substring(startIndex + this.placeholderPrefix.length(), endIndex);
 				String originalPlaceholder = placeholder;
 				if (visitedPlaceholders == null) {
@@ -146,8 +151,10 @@ public class PropertyPlaceholderHelper {
 							"Circular placeholder reference '" + originalPlaceholder + "' in property definitions");
 				}
 				// Recursive invocation, parsing placeholders contained in the placeholder key.
+				// 再次当作是占位符解析字符串
 				placeholder = parseStringValue(placeholder, placeholderResolver, visitedPlaceholders);
 				// Now obtain the value for the fully resolved key...
+				// 占位符解析器解析，得到值
 				String propVal = placeholderResolver.resolvePlaceholder(placeholder);
 				if (propVal == null && this.valueSeparator != null) {
 					int separatorIndex = placeholder.indexOf(this.valueSeparator);
@@ -163,6 +170,7 @@ public class PropertyPlaceholderHelper {
 				if (propVal != null) {
 					// Recursive invocation, parsing placeholders contained in the
 					// previously resolved placeholder value.
+					// 占位符解析器解析，得到值
 					propVal = parseStringValue(propVal, placeholderResolver, visitedPlaceholders);
 					result.replace(startIndex, endIndex + this.placeholderSuffix.length(), propVal);
 					if (logger.isTraceEnabled()) {
@@ -188,9 +196,11 @@ public class PropertyPlaceholderHelper {
 	}
 
 	private int findPlaceholderEndIndex(CharSequence buf, int startIndex) {
+		// placeholderPrefix == "${"
 		int index = startIndex + this.placeholderPrefix.length();
 		int withinNestedPlaceholder = 0;
 		while (index < buf.length()) {
+			// placeholderSuffix == "}"
 			if (StringUtils.substringMatch(buf, index, this.placeholderSuffix)) {
 				if (withinNestedPlaceholder > 0) {
 					withinNestedPlaceholder--;

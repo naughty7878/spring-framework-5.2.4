@@ -40,6 +40,11 @@ public interface ClassFilter {
 	 * @param clazz the candidate target class
 	 * @return whether the advice should apply to the given target class
 	 */
+	/**
+	 * 切入点是否应用于给定的接口或目标类？
+	 * @param clazz 目标类
+	 * @return 该 Pointcut 关联的 Advice 是否需要适用于给定的目标类
+	 */
 	boolean matches(Class<?> clazz);
 
 

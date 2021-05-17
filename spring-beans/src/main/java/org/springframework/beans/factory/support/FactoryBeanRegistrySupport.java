@@ -44,6 +44,7 @@ import org.springframework.lang.Nullable;
 public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanRegistry {
 
 	/** Cache of singleton objects created by FactoryBeans: FactoryBean name to object. */
+	// FactoryBeans创建的单例对象缓存：FactoryBean名称到对象。
 	private final Map<String, Object> factoryBeanObjectCache = new ConcurrentHashMap<>(16);
 
 
@@ -88,16 +89,23 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 	 * Obtain an object to expose from the given FactoryBean.
 	 * @param factory the FactoryBean instance
 	 * @param beanName the name of the bean
-	 * @param shouldPostProcess whether the bean is subject to post-processing
+	 * @param shouldPostProcess 是否需要后置处理(即经过后置处理器处理) whether the bean is subject to post-processing
 	 * @return the object obtained from the FactoryBean
 	 * @throws BeanCreationException if FactoryBean object creation failed
 	 * @see org.springframework.beans.factory.FactoryBean#getObject()
 	 */
 	protected Object getObjectFromFactoryBean(FactoryBean<?> factory, String beanName, boolean shouldPostProcess) {
+		/**
+		 * FactoryBean 也有单例和非单例之分，针对不同类型的 FactoryBean，这里有两种处理方式：
+		 *   1. 单例 FactoryBean 生成的 bean 实例也认为是单例类型。需放入缓存中，供后续重复使用
+		 *   2. 非单例 FactoryBean 生成的 bean 实例则不会被放入缓存中，每次都会创建新的实例
+		 **/
 		if (factory.isSingleton() && containsSingleton(beanName)) {
 			synchronized (getSingletonMutex()) {
+				// 从缓存中取 bean 实例，避免多次创建 bean 实例
 				Object object = this.factoryBeanObjectCache.get(beanName);
 				if (object == null) {
+					// 调用实现FactoryBean接口对象的getObject()方法逻辑
 					object = doGetObjectFromFactoryBean(factory, beanName);
 					// Only post-process and store if not put there already during getObject() call above
 					// (e.g. because of circular reference processing triggered by custom getBean calls)
@@ -106,13 +114,17 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 						object = alreadyThere;
 					}
 					else {
+						// shouldPostProcess 是否需要后置处理标识
 						if (shouldPostProcess) {
+							// 判断当地的bean是否正在创建
 							if (isSingletonCurrentlyInCreation(beanName)) {
 								// Temporarily return non-post-processed object, not storing it yet..
 								return object;
 							}
+							// 添加正在创建对象标识
 							beforeSingletonCreation(beanName);
 							try {
+								// bean后置处理器调用，处理实现FactoryBean接口的bean
 								object = postProcessObjectFromFactoryBean(object, beanName);
 							}
 							catch (Throwable ex) {
@@ -123,7 +135,11 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 								afterSingletonCreation(beanName);
 							}
 						}
+						// 这里的 beanName 对应于 FactoryBean 的实现类，
+						// FactoryBean 的实现类也会被实例化，并被缓存在 singletonObjects 中
 						if (containsSingleton(beanName)) {
+							// 这里的 beanName 对应于 FactoryBean 的实现类，
+							// FactoryBean 的实现类也会被实例化，并被缓存在 singletonObjects 中
 							this.factoryBeanObjectCache.put(beanName, object);
 						}
 					}
@@ -168,6 +184,7 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 				}
 			}
 			else {
+				// 调用实现FactoryBean接口对象的getObject()方法，获取对象
 				object = factory.getObject();
 			}
 		}
@@ -180,6 +197,7 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 
 		// Do not accept a null value for a FactoryBean that's not fully
 		// initialized yet: Many FactoryBeans just return null then.
+		// 如果没有获取到，返回一个NullBean 空bean给外面
 		if (object == null) {
 			if (isSingletonCurrentlyInCreation(beanName)) {
 				throw new BeanCurrentlyInCreationException(

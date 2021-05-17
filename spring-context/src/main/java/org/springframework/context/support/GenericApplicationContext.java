@@ -95,11 +95,12 @@ public class GenericApplicationContext extends AbstractApplicationContext implem
 
 	private final DefaultListableBeanFactory beanFactory;
 
+	// 资源加载器
 	@Nullable
 	private ResourceLoader resourceLoader;
-
+	// 自定义类加载器标识，默认false
 	private boolean customClassLoader = false;
-
+	// 刷新标识，默认false
 	private final AtomicBoolean refreshed = new AtomicBoolean();
 
 
@@ -262,10 +263,12 @@ public class GenericApplicationContext extends AbstractApplicationContext implem
 	 */
 	@Override
 	protected final void refreshBeanFactory() throws IllegalStateException {
+		// CAS修改刷新标识
 		if (!this.refreshed.compareAndSet(false, true)) {
 			throw new IllegalStateException(
 					"GenericApplicationContext does not support multiple refresh attempts: just call 'refresh' once");
 		}
+		// 设置bean工厂序列号ID是 上下文的ID
 		this.beanFactory.setSerializationId(getId());
 	}
 

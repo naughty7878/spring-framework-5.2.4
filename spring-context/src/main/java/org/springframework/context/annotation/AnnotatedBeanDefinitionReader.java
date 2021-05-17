@@ -68,6 +68,7 @@ public class AnnotatedBeanDefinitionReader {
 	 * @see #setEnvironment(Environment)
 	 */
 	public AnnotatedBeanDefinitionReader(BeanDefinitionRegistry registry) {
+		// 调用自己的构造方法
 		this(registry, getOrCreateEnvironment(registry));
 	}
 
@@ -81,10 +82,15 @@ public class AnnotatedBeanDefinitionReader {
 	 * @since 3.1
 	 */
 	public AnnotatedBeanDefinitionReader(BeanDefinitionRegistry registry, Environment environment) {
+		// 断言非空
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
 		Assert.notNull(environment, "Environment must not be null");
+
+		// 把ApplicationContext对象赋值给AnnotatedBeanDefinitionReader
 		this.registry = registry;
+		// 用户处理条件表达式计算 @Conditionl注解
 		this.conditionEvaluator = new ConditionEvaluator(registry, environment, null);
+		// 注册Spring注解配置的配置处理器
 		AnnotationConfigUtils.registerAnnotationConfigProcessors(this.registry);
 	}
 
@@ -133,6 +139,7 @@ public class AnnotatedBeanDefinitionReader {
 	 * e.g. {@link Configuration @Configuration} classes
 	 */
 	public void register(Class<?>... componentClasses) {
+		// 遍历
 		for (Class<?> componentClass : componentClasses) {
 			registerBean(componentClass);
 		}
@@ -143,6 +150,7 @@ public class AnnotatedBeanDefinitionReader {
 	 * class-declared annotations.
 	 * @param beanClass the class of the bean
 	 */
+	// 注册Bean
 	public void registerBean(Class<?> beanClass) {
 		doRegisterBean(beanClass, null, null, null, null);
 	}
@@ -249,26 +257,47 @@ public class AnnotatedBeanDefinitionReader {
 	private <T> void doRegisterBean(Class<T> beanClass, @Nullable String name,
 			@Nullable Class<? extends Annotation>[] qualifiers, @Nullable Supplier<T> supplier,
 			@Nullable BeanDefinitionCustomizer[] customizers) {
-
+		// 根据beanClass新建一个通用注解bean定义
+		// AnnotatedGenericBeanDefinition可以理解为一种数据结构，是用来描述Bean的，这里的作用就是把传入的标记了注解 的类
+		// 转为AnnotatedGenericBeanDefinition数据结构，里面有一个getMetadata方法，可以拿到类上的注解
 		AnnotatedGenericBeanDefinition abd = new AnnotatedGenericBeanDefinition(beanClass);
+		// 根据bean定义的元信息判断是否跳过注册
+		// 判断是否需要跳过注解，spring中有一个@Condition注解，当不满足条件，这个bean就不会被解析
 		if (this.conditionEvaluator.shouldSkip(abd.getMetadata())) {
 			return;
 		}
-
+		// 设置实例供应商，默认null
 		abd.setInstanceSupplier(supplier);
+		// 解析注解Bean定义的作用域，
+		// 若@Scope("singleton")，则Bean为单态类型，默认为singleton
+		// 若@Scope("prototype")，则Bean为原型类型；
 		ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(abd);
+		// 为注解Bean定义设置作用域
 		abd.setScope(scopeMetadata.getScopeName());
+		// 为注解Bean定义生成Bean名称
 		String beanName = (name != null ? name : this.beanNameGenerator.generateBeanName(abd, this.registry));
-
+		// 处理注解Bean定义中的通用注解
+		// 解析通用注解，填充到AnnotatedGenericBeanDefinition（abd），解析的注解为Lazy，Primary，DependsOn，Role，Descrption
 		AnnotationConfigUtils.processCommonDefinitionAnnotations(abd);
+		// 如果在向容器注册注解Bean定义时，使用了额外的限定符注解，则解析限定符注解。
+		// 主要是配置的关于autowiring自动依赖注入装配的限定条件，即@Qualifier注解
+		// AnnotationConfigApplicationContext annotationConfigApplicationContext = new AnnotationConfigAppli ationContext(Appconfig.class);常规方式去初始化spring，
+		// qualifiers永远都是空的，包括上面的name和instanceSupplier都是同样的道理
 		if (qualifiers != null) {
+			// 可以传入qualifier数组，所以需要循环处理
 			for (Class<? extends Annotation> qualifier : qualifiers) {
+				// 如果配置了@Primary注解，设置该Bean为autowiring自动依赖注入装配时的首选
 				if (Primary.class == qualifier) {
 					abd.setPrimary(true);
 				}
+				// 如果配置了@Lazy注解，则设置该Bean为非延迟初始化，如果没有配置，
+				// 则该Bean为预实例化
 				else if (Lazy.class == qualifier) {
 					abd.setLazyInit(true);
 				}
+				// 如果使用了除@Primary和@Lazy以外的其他注解，则为该Bean添加一
+				// 个autowiring自动依赖注入装配限定符，该Bean在进autowiring
+				// 自动依赖注入装配时，根据名称装配限定符指定的Bean
 				else {
 					abd.addQualifier(new AutowireCandidateQualifier(qualifier));
 				}
@@ -279,19 +308,23 @@ public class AnnotatedBeanDefinitionReader {
 				customizer.customize(abd);
 			}
 		}
-
+		// 创建一个指定Bean名称的Bean定义对象，封装注解Bean定义类数据
 		BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(abd, beanName);
+		// 根据注解Bean定义类中配置的作用域，创建相应的代理对象
 		definitionHolder = AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
+		// 向IOC容器注册注解Bean类定义对象
 		BeanDefinitionReaderUtils.registerBeanDefinition(definitionHolder, this.registry);
 	}
 
 
 	/**
+	 * 如果可能，从给定的注册表获取环境，否则返回一个新的标准环境。
 	 * Get the Environment from the given registry if possible, otherwise return a new
 	 * StandardEnvironment.
 	 */
 	private static Environment getOrCreateEnvironment(BeanDefinitionRegistry registry) {
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
+		//
 		if (registry instanceof EnvironmentCapable) {
 			return ((EnvironmentCapable) registry).getEnvironment();
 		}

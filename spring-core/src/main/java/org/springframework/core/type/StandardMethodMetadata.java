@@ -39,11 +39,11 @@ import org.springframework.util.MultiValueMap;
  * @since 3.0
  */
 public class StandardMethodMetadata implements MethodMetadata {
-
+	// 内部方法
 	private final Method introspectedMethod;
-
+	// 嵌套注解Map
 	private final boolean nestedAnnotationsAsMap;
-
+	// 合成注解
 	private final MergedAnnotations mergedAnnotations;
 
 

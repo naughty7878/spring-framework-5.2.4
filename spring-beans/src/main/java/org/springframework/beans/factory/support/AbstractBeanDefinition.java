@@ -69,24 +69,28 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	 * Constant that indicates no external autowiring at all.
 	 * @see #setAutowireMode
 	 */
+	// 无需自动装配
 	public static final int AUTOWIRE_NO = AutowireCapableBeanFactory.AUTOWIRE_NO;
 
 	/**
 	 * Constant that indicates autowiring bean properties by name.
 	 * @see #setAutowireMode
 	 */
+	// 按名称自动装配bean属性
 	public static final int AUTOWIRE_BY_NAME = AutowireCapableBeanFactory.AUTOWIRE_BY_NAME;
 
 	/**
 	 * Constant that indicates autowiring bean properties by type.
 	 * @see #setAutowireMode
 	 */
+	// 按类型自动装配bean属性
 	public static final int AUTOWIRE_BY_TYPE = AutowireCapableBeanFactory.AUTOWIRE_BY_TYPE;
 
 	/**
 	 * Constant that indicates autowiring a constructor.
 	 * @see #setAutowireMode
 	 */
+	// 按构造器自动装配
 	public static final int AUTOWIRE_CONSTRUCTOR = AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR;
 
 	/**
@@ -96,6 +100,7 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	 * @deprecated as of Spring 3.0: If you are using mixed autowiring strategies,
 	 * use annotation-based autowiring for clearer demarcation of autowiring needs.
 	 */
+	// 过时方法，Spring3.0之后不再支持
 	@Deprecated
 	public static final int AUTOWIRE_AUTODETECT = AutowireCapableBeanFactory.AUTOWIRE_AUTODETECT;
 
@@ -143,9 +148,10 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 
 	@Nullable
 	private String scope = SCOPE_DEFAULT;
-
+	// 抽象类Bean定义标识
 	private boolean abstractFlag = false;
 
+	// 是否懒加载
 	@Nullable
 	private Boolean lazyInit;
 
@@ -175,24 +181,26 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	@Nullable
 	private String factoryMethodName;
 
+	// 构造器参数值对象
 	@Nullable
 	private ConstructorArgumentValues constructorArgumentValues;
 
 	@Nullable
 	private MutablePropertyValues propertyValues;
-
+	// 重写方法集合
 	private MethodOverrides methodOverrides = new MethodOverrides();
-
+	// 初始化方法名
 	@Nullable
 	private String initMethodName;
-
+	// 销毁方法名
 	@Nullable
 	private String destroyMethodName;
 
 	private boolean enforceInitMethod = true;
 
 	private boolean enforceDestroyMethod = true;
-
+	// 类定义是否是合成的
+	// synthetic 如果为false，则后续实例需要经过后置处理器处理，反之则否
 	private boolean synthetic = false;
 
 	private int role = BeanDefinition.ROLE_APPLICATION;
@@ -593,20 +601,27 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	 * @see #AUTOWIRE_CONSTRUCTOR
 	 * @see #AUTOWIRE_BY_TYPE
 	 */
+	// 获取解析的注入模式
 	public int getResolvedAutowireMode() {
+		// 如果是自动检查注入
 		if (this.autowireMode == AUTOWIRE_AUTODETECT) {
 			// Work out whether to apply setter autowiring or constructor autowiring.
 			// If it has a no-arg constructor it's deemed to be setter autowiring,
 			// otherwise we'll try constructor autowiring.
+			// 获取构造器
 			Constructor<?>[] constructors = getBeanClass().getConstructors();
 			for (Constructor<?> constructor : constructors) {
+				// 构造器参数数量为0
 				if (constructor.getParameterCount() == 0) {
+					// 根据类型自动注入
 					return AUTOWIRE_BY_TYPE;
 				}
 			}
+			// 根据构造器自动注入
 			return AUTOWIRE_CONSTRUCTOR;
 		}
 		else {
+			// 直接返回自动注入类型
 			return this.autowireMode;
 		}
 	}
@@ -849,6 +864,7 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	@Override
 	public ConstructorArgumentValues getConstructorArgumentValues() {
 		if (this.constructorArgumentValues == null) {
+			// 创建一个构造器参数值对象
 			this.constructorArgumentValues = new ConstructorArgumentValues();
 		}
 		return this.constructorArgumentValues;
@@ -993,6 +1009,8 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	}
 
 	/**
+	 * 返回类定义是否是合成的
+	 * synthetic 如果为false，则后续实例需要经过后置处理器处理，反之则否
 	 * Return whether this bean definition is 'synthetic', that is,
 	 * not defined by the application itself.
 	 */
@@ -1109,12 +1127,16 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	 */
 	public void prepareMethodOverrides() throws BeanDefinitionValidationException {
 		// Check that lookup methods exist and determine their overloaded status.
+		// 检测是否存在方法注入,并循环预处理方法注入
 		if (hasMethodOverrides()) {
 			getMethodOverrides().getOverrides().forEach(this::prepareMethodOverride);
 		}
 	}
 
 	/**
+	 * 验证并准备给定的方法覆盖。检查指定名称的方法是否存在，
+	 * 如果没有找到方法，则将其标记为未重载。
+	 *
 	 * Validate and prepare the given method override.
 	 * Checks for existence of a method with the specified name,
 	 * marking it as not overloaded if none found.
@@ -1122,12 +1144,17 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	 * @throws BeanDefinitionValidationException in case of validation failure
 	 */
 	protected void prepareMethodOverride(MethodOverride mo) throws BeanDefinitionValidationException {
+		// 统计注入的方法个数
 		int count = ClassUtils.getMethodCountForName(getBeanClass(), mo.getMethodName());
+		// 如果为0,则抛出异常
 		if (count == 0) {
 			throw new BeanDefinitionValidationException(
 					"Invalid method override: no method with name '" + mo.getMethodName() +
 					"' on class [" + getBeanClassName() + "]");
 		}
+		// 如果为1,则将注入方法标记为未重载
+		// 注意:当有多个重载方法时,为了确定调用哪个具体的方法,Spring对重载方法的参数解析是很复杂的
+		// 所以,如果注入方法没有被重载这里就将其标记,省去了对方法参数的解析过程,直接调用即可
 		else if (count == 1) {
 			// Mark override as not overloaded, to avoid the overhead of arg type checking.
 			mo.setOverloaded(false);

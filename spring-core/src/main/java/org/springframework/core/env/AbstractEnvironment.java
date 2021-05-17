@@ -560,12 +560,13 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	public <T> T getRequiredProperty(String key, Class<T> targetType) throws IllegalStateException {
 		return this.propertyResolver.getRequiredProperty(key, targetType);
 	}
-
+	// 解析占位符的值（text="${xxx.name}"）
 	@Override
 	public String resolvePlaceholders(String text) {
 		return this.propertyResolver.resolvePlaceholders(text);
 	}
 
+	// 解析占位符的值（text="${xxx}"）
 	@Override
 	public String resolveRequiredPlaceholders(String text) throws IllegalArgumentException {
 		return this.propertyResolver.resolveRequiredPlaceholders(text);

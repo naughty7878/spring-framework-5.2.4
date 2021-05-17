@@ -75,6 +75,7 @@ public abstract class AdviceModeImportSelector<A extends Annotation> implements 
 		}
 
 		AdviceMode adviceMode = attributes.getEnum(getAdviceModeAttributeName());
+		// 调用selectImports(),获取需要导入的类
 		String[] imports = selectImports(adviceMode);
 		if (imports == null) {
 			throw new IllegalArgumentException("Unknown AdviceMode: " + adviceMode);

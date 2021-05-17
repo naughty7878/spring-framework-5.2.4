@@ -77,17 +77,22 @@ public class ModelAndViewMethodReturnValueHandler implements HandlerMethodReturn
 	@Override
 	public void handleReturnValue(@Nullable Object returnValue, MethodParameter returnType,
 			ModelAndViewContainer mavContainer, NativeWebRequest webRequest) throws Exception {
-
+		// 返回值为空
 		if (returnValue == null) {
 			mavContainer.setRequestHandled(true);
 			return;
 		}
 
 		ModelAndView mav = (ModelAndView) returnValue;
+		// 视图是引用
 		if (mav.isReference()) {
+			// 获取视图名
 			String viewName = mav.getViewName();
+			// 设置模型视图容器名称
 			mavContainer.setViewName(viewName);
+			// 视图名不为空 && 是重定向视图名（根据名称是否包含 "redirect:" 判断）
 			if (viewName != null && isRedirectViewName(viewName)) {
+				// 模型视图容器设置为重定向
 				mavContainer.setRedirectModelScenario(true);
 			}
 		}
@@ -98,7 +103,9 @@ public class ModelAndViewMethodReturnValueHandler implements HandlerMethodReturn
 				mavContainer.setRedirectModelScenario(true);
 			}
 		}
+		// 设置模型视图容器状态，默认是空
 		mavContainer.setStatus(mav.getStatus());
+		// 模型视图容器添加 返回的model中所有属性
 		mavContainer.addAllAttributes(mav.getModel());
 	}
 

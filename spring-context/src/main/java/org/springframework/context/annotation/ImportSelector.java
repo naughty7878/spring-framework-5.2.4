@@ -65,6 +65,7 @@ public interface ImportSelector {
 	 * the {@link AnnotationMetadata} of the importing @{@link Configuration} class.
 	 * @return the class names, or an empty array if none
 	 */
+	// 返回一个包含了类全限定名的数组,这些类会注入到Spring容器当中
 	String[] selectImports(AnnotationMetadata importingClassMetadata);
 
 	/**
@@ -77,6 +78,7 @@ public interface ImportSelector {
 	 * of transitively imported configuration classes, or {@code null} if none
 	 * @since 5.2.4
 	 */
+	// 返回一个包含了类全限定名的数组,这些类会注入到Spring容器当中
 	@Nullable
 	default Predicate<String> getExclusionFilter() {
 		return null;

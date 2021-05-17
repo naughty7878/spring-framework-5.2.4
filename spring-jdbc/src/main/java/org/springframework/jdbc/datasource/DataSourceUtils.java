@@ -76,6 +76,7 @@ public abstract class DataSourceUtils {
 	 */
 	public static Connection getConnection(DataSource dataSource) throws CannotGetJdbcConnectionException {
 		try {
+			// 去获取连接
 			return doGetConnection(dataSource);
 		}
 		catch (SQLException ex) {
@@ -100,7 +101,7 @@ public abstract class DataSourceUtils {
 	 */
 	public static Connection doGetConnection(DataSource dataSource) throws SQLException {
 		Assert.notNull(dataSource, "No DataSource specified");
-
+		// 从事务同步管理器中获取连接持有者
 		ConnectionHolder conHolder = (ConnectionHolder) TransactionSynchronizationManager.getResource(dataSource);
 		if (conHolder != null && (conHolder.hasConnection() || conHolder.isSynchronizedWithTransaction())) {
 			conHolder.requested();
@@ -108,6 +109,7 @@ public abstract class DataSourceUtils {
 				logger.debug("Fetching resumed JDBC Connection from DataSource");
 				conHolder.setConnection(fetchConnection(dataSource));
 			}
+			// 返回连接
 			return conHolder.getConnection();
 		}
 		// Else we either got no holder or an empty thread-bound holder here.
@@ -179,11 +181,13 @@ public abstract class DataSourceUtils {
 		Assert.notNull(con, "No Connection specified");
 
 		// Set read-only flag.
+		// 是否只读
 		if (definition != null && definition.isReadOnly()) {
 			try {
 				if (logger.isDebugEnabled()) {
 					logger.debug("Setting JDBC Connection [" + con + "] read-only");
 				}
+				// 设置只读
 				con.setReadOnly(true);
 			}
 			catch (SQLException | RuntimeException ex) {
@@ -201,19 +205,23 @@ public abstract class DataSourceUtils {
 		}
 
 		// Apply specific isolation level, if any.
+		// 支持特别的隔离级别
 		Integer previousIsolationLevel = null;
 		if (definition != null && definition.getIsolationLevel() != TransactionDefinition.ISOLATION_DEFAULT) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Changing isolation level of JDBC Connection [" + con + "] to " +
 						definition.getIsolationLevel());
 			}
+			// 获取当前事务隔离级别
 			int currentIsolation = con.getTransactionIsolation();
 			if (currentIsolation != definition.getIsolationLevel()) {
+				// 以前的隔离级别
 				previousIsolationLevel = currentIsolation;
+				// 设置事务新的隔离级别
 				con.setTransactionIsolation(definition.getIsolationLevel());
 			}
 		}
-
+		// 返回以前的隔离级别
 		return previousIsolationLevel;
 	}
 
@@ -239,6 +247,7 @@ public abstract class DataSourceUtils {
 					logger.debug("Resetting isolation level of JDBC Connection [" +
 							con + "] to " + previousIsolationLevel);
 				}
+				// 设置之前的隔离级别
 				con.setTransactionIsolation(previousIsolationLevel);
 			}
 

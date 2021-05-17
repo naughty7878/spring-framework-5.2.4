@@ -67,21 +67,23 @@ public class PropertySourcesPropertyResolver extends AbstractPropertyResolver {
 	public <T> T getProperty(String key, Class<T> targetValueType) {
 		return getProperty(key, targetValueType, true);
 	}
-
+	// 获取原始字符串的属性
 	@Override
 	@Nullable
 	protected String getPropertyAsRawString(String key) {
 		return getProperty(key, String.class, false);
 	}
-
+	// 获取属性
 	@Nullable
 	protected <T> T getProperty(String key, Class<T> targetValueType, boolean resolveNestedPlaceholders) {
 		if (this.propertySources != null) {
+			// 遍历属性解析器中的属性源集合
 			for (PropertySource<?> propertySource : this.propertySources) {
 				if (logger.isTraceEnabled()) {
 					logger.trace("Searching for key '" + key + "' in PropertySource '" +
 							propertySource.getName() + "'");
 				}
+				// 获取值
 				Object value = propertySource.getProperty(key);
 				if (value != null) {
 					if (resolveNestedPlaceholders && value instanceof String) {

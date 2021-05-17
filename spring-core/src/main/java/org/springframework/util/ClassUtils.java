@@ -182,21 +182,25 @@ public abstract class ClassUtils {
 	 * @see Thread#getContextClassLoader()
 	 * @see ClassLoader#getSystemClassLoader()
 	 */
+	// 获取默认的类加载器
 	@Nullable
 	public static ClassLoader getDefaultClassLoader() {
 		ClassLoader cl = null;
 		try {
+			// 这里获取的是当前线程的应用类加载器 AppClassLoader
 			cl = Thread.currentThread().getContextClassLoader();
 		}
 		catch (Throwable ex) {
 			// Cannot access thread context ClassLoader - falling back...
 		}
+		// 判断类加载器是否为空
 		if (cl == null) {
 			// No thread context class loader -> use class loader of this class.
 			cl = ClassUtils.class.getClassLoader();
 			if (cl == null) {
 				// getClassLoader() returning null indicates the bootstrap ClassLoader
 				try {
+					// 获取系统类加载
 					cl = ClassLoader.getSystemClassLoader();
 				}
 				catch (Throwable ex) {
@@ -247,6 +251,7 @@ public abstract class ClassUtils {
 
 		Class<?> clazz = resolvePrimitiveClassName(name);
 		if (clazz == null) {
+			// 根据类名，从缓存中获取Class
 			clazz = commonClassCache.get(name);
 		}
 		if (clazz != null) {
@@ -279,6 +284,7 @@ public abstract class ClassUtils {
 			clToUse = getDefaultClassLoader();
 		}
 		try {
+			// 根据类名加载类，获得Class
 			return Class.forName(name, false, clToUse);
 		}
 		catch (ClassNotFoundException ex) {
@@ -891,18 +897,25 @@ public abstract class ClassUtils {
 	}
 
 	/**
+	 * 返回给定类的用户定义类：通常是给定的类，
+	 * 但在CGLIB生成的子类的情况下是原始类。
+	 *
 	 * Return the user-defined class for the given class: usually simply the given
 	 * class, but the original class in case of a CGLIB-generated subclass.
 	 * @param clazz the class to check
 	 * @return the user-defined class
 	 */
 	public static Class<?> getUserClass(Class<?> clazz) {
+		// 如果类名包含"$$"， 则是一个代理类Class
 		if (clazz.getName().contains(CGLIB_CLASS_SEPARATOR)) {
+			// 获取代理的父类
 			Class<?> superclass = clazz.getSuperclass();
+			// 父类不为空，不是Object类，则返回
 			if (superclass != null && superclass != Object.class) {
 				return superclass;
 			}
 		}
+		// 返回传进来的类Class
 		return clazz;
 	}
 
@@ -1051,6 +1064,7 @@ public abstract class ClassUtils {
 	 * @return the qualified name of the method
 	 * @since 4.3.4
 	 */
+	// 获取唯一的方法名
 	public static String getQualifiedMethodName(Method method, @Nullable Class<?> clazz) {
 		Assert.notNull(method, "Method must not be null");
 		return (clazz != null ? clazz : method.getDeclaringClass()).getName() + '.' + method.getName();
@@ -1262,6 +1276,8 @@ public abstract class ClassUtils {
 	 * @see #getInterfaceMethodIfPossible
 	 */
 	public static Method getMostSpecificMethod(Method method, @Nullable Class<?> targetClass) {
+		// 判断目标类与声明类 不相同
+		// 且是覆盖的
 		if (targetClass != null && targetClass != method.getDeclaringClass() && isOverridable(method, targetClass)) {
 			try {
 				if (Modifier.isPublic(method.getModifiers())) {
@@ -1273,6 +1289,7 @@ public abstract class ClassUtils {
 					}
 				}
 				else {
+
 					Method specificMethod =
 							ReflectionUtils.findMethod(targetClass, method.getName(), method.getParameterTypes());
 					return (specificMethod != null ? specificMethod : method);
@@ -1282,6 +1299,7 @@ public abstract class ClassUtils {
 				// Security settings are disallowing reflective access; fall back to 'method' below.
 			}
 		}
+		// 返回原方法
 		return method;
 	}
 

@@ -125,6 +125,9 @@ public final class WebAsyncManager {
 	}
 
 	/**
+	 * 当前请求的选定处理程序是否选择异步处理该请求。返回值“true”表示正在进行并发处理，并且响应将保持打开状态。
+	 * 返回值“false”表示并行处理没有启动，或者可能已经完成，并且请求已被调度以进一步处理并发结果。
+	 *
 	 * Whether the selected handler for the current request chose to handle the
 	 * request asynchronously. A return value of "true" indicates concurrent
 	 * handling is under way and the response will remain open. A return value

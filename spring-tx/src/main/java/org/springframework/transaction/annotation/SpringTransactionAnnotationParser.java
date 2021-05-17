@@ -44,12 +44,15 @@ public class SpringTransactionAnnotationParser implements TransactionAnnotationP
 		return AnnotationUtils.isCandidateClass(targetClass, Transactional.class);
 	}
 
+	// 解析事物注解
 	@Override
 	@Nullable
 	public TransactionAttribute parseTransactionAnnotation(AnnotatedElement element) {
+		// 获取 @Transactional 的属性
 		AnnotationAttributes attributes = AnnotatedElementUtils.findMergedAnnotationAttributes(
 				element, Transactional.class, false, false);
 		if (attributes != null) {
+			// 解析  @Transactional 注解，解析注解属性，获得事物属性
 			return parseTransactionAnnotation(attributes);
 		}
 		else {
@@ -61,17 +64,25 @@ public class SpringTransactionAnnotationParser implements TransactionAnnotationP
 		return parseTransactionAnnotation(AnnotationUtils.getAnnotationAttributes(ann, false, false));
 	}
 
+	// 解析注解属性，获得事物属性
 	protected TransactionAttribute parseTransactionAnnotation(AnnotationAttributes attributes) {
+		// 这个地方事务属性对象是有很多默认值的，它继承自DefaultTransactionDefinition
 		RuleBasedTransactionAttribute rbta = new RuleBasedTransactionAttribute();
 
+		// 传播
 		Propagation propagation = attributes.getEnum("propagation");
 		rbta.setPropagationBehavior(propagation.value());
+		// 隔离等级
 		Isolation isolation = attributes.getEnum("isolation");
 		rbta.setIsolationLevel(isolation.value());
+		// 超时时间
 		rbta.setTimeout(attributes.getNumber("timeout").intValue());
+		// 是否只读
 		rbta.setReadOnly(attributes.getBoolean("readOnly"));
+		// 事务管理器bean的名称
 		rbta.setQualifier(attributes.getString("value"));
 
+		// 回滚相关配置
 		List<RollbackRuleAttribute> rollbackRules = new ArrayList<>();
 		for (Class<?> rbRule : attributes.getClassArray("rollbackFor")) {
 			rollbackRules.add(new RollbackRuleAttribute(rbRule));

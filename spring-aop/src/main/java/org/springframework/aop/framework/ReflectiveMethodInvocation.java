@@ -86,6 +86,7 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	protected final List<?> interceptorsAndDynamicMethodMatchers;
 
 	/**
+	 * 当前拦截器的索引
 	 * Index from 0 of the current interceptor we're invoking.
 	 * -1 until we invoke: then the current interceptor.
 	 */
@@ -114,6 +115,7 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 		this.targetClass = targetClass;
 		this.method = BridgeMethodResolver.findBridgedMethod(method);
 		this.arguments = AopProxyUtils.adaptArgumentsIfNecessary(method, arguments);
+		// 责任链/拦截器和动态方法匹配对象
 		this.interceptorsAndDynamicMethodMatchers = interceptorsAndDynamicMethodMatchers;
 	}
 
@@ -159,30 +161,40 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	@Nullable
 	public Object proceed() throws Throwable {
 		// We start with an index of -1 and increment early.
+		//  如果拦截器列表已经执行完毕，则调用目标对象的目标方法
 		if (this.currentInterceptorIndex == this.interceptorsAndDynamicMethodMatchers.size() - 1) {
+			// 调用目标方法
 			return invokeJoinpoint();
 		}
 
+		// 获取责任链中的下一个 MethodInterceptor，用来对目标方法做增强处理
 		Object interceptorOrInterceptionAdvice =
 				this.interceptorsAndDynamicMethodMatchers.get(++this.currentInterceptorIndex);
 		if (interceptorOrInterceptionAdvice instanceof InterceptorAndDynamicMethodMatcher) {
 			// Evaluate dynamic method matcher here: static part will already have
 			// been evaluated and found to match.
+			// 如果 interceptorOrInterceptionAdvice 是 InterceptorAndDynamicMethodMatcher 类型，
+			// 说明需要对目标方法进行动态匹配
 			InterceptorAndDynamicMethodMatcher dm =
 					(InterceptorAndDynamicMethodMatcher) interceptorOrInterceptionAdvice;
 			Class<?> targetClass = (this.targetClass != null ? this.targetClass : this.method.getDeclaringClass());
+
+			// 方法动态匹配成功，才对目标方法做增强处理
 			if (dm.methodMatcher.matches(this.method, targetClass, this.arguments)) {
 				return dm.interceptor.invoke(this);
 			}
 			else {
 				// Dynamic matching failed.
 				// Skip this interceptor and invoke the next in the chain.
+				// 方法动态匹配失败，则驱动责任链向前运行
 				return proceed();
 			}
 		}
 		else {
 			// It's an interceptor, so we just invoke it: The pointcut will have
 			// been evaluated statically before this object was constructed.
+			// 如果目标方法不需要动态匹配，则直接调用 MethodInterceptor 的 invoke 方法，
+			// 对目标方法做增强处理。
 			return ((MethodInterceptor) interceptorOrInterceptionAdvice).invoke(this);
 		}
 	}

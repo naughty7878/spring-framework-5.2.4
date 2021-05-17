@@ -45,11 +45,11 @@ import org.springframework.transaction.TransactionUsageException;
  * @see DefaultTransactionStatus
  */
 public abstract class AbstractTransactionStatus implements TransactionStatus {
-
+	// 是否回滚
 	private boolean rollbackOnly = false;
-
+	// 是否完成
 	private boolean completed = false;
-
+	// 保存点
 	@Nullable
 	private Object savepoint;
 

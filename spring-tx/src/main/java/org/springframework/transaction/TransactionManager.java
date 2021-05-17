@@ -16,6 +16,8 @@
 
 package org.springframework.transaction;
 
+import org.springframework.transaction.support.DefaultTransactionDefinition;
+
 /**
  * Marker interface for Spring transaction manager implementations,
  * either traditional or reactive.

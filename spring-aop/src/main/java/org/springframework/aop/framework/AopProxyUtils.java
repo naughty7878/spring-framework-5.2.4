@@ -103,12 +103,18 @@ public abstract class AopProxyUtils {
 	}
 
 	/**
+	 *
+	 * 返回要为给定 AOP 配置代理的完整接口集。
+	 * 始终添加 SpringProxy 接口
+	 * 如果 opaque 标记为 false，则始终添加 Advised 接口
+	 *
 	 * Determine the complete set of interfaces to proxy for the given AOP configuration.
 	 * <p>This will always add the {@link Advised} interface unless the AdvisedSupport's
 	 * {@link AdvisedSupport#setOpaque "opaque"} flag is on. Always adds the
 	 * {@link org.springframework.aop.SpringProxy} marker interface.
-	 * @param advised the proxy config
+	 * @param advised the proxy config 代理配置
 	 * @param decoratingProxy whether to expose the {@link DecoratingProxy} interface
+	 *                        decoratingProxy 为 ture 则添加 DecoratingProxy 接口
 	 * @return the complete set of interfaces to proxy
 	 * @since 4.3
 	 * @see SpringProxy
@@ -116,6 +122,7 @@ public abstract class AopProxyUtils {
 	 * @see DecoratingProxy
 	 */
 	static Class<?>[] completeProxiedInterfaces(AdvisedSupport advised, boolean decoratingProxy) {
+		// 1. 获取到所有需要被代理的接口
 		Class<?>[] specifiedInterfaces = advised.getProxiedInterfaces();
 		if (specifiedInterfaces.length == 0) {
 			// No user-specified interfaces: check whether target class is an interface.
@@ -130,8 +137,11 @@ public abstract class AopProxyUtils {
 				specifiedInterfaces = advised.getProxiedInterfaces();
 			}
 		}
+		// 如果被代理的接口集合中没有 SpringProxy 接口，则需要添加 SpringProxy 接口到被代理集合集合中
 		boolean addSpringProxy = !advised.isInterfaceProxied(SpringProxy.class);
+		// 如果 opaque 为 false（默认是 false），且被代理的接口集合中没有 Advised 接口，则需要添加 Advised 接口到被代理集合集合中
 		boolean addAdvised = !advised.isOpaque() && !advised.isInterfaceProxied(Advised.class);
+		// decoratingProxy 为 ture，且被代理的接口集合中没有 DecoratingProxy 接口，则需要添加 DecoratingProxy 接口到被代理集合集合中
 		boolean addDecoratingProxy = (decoratingProxy && !advised.isInterfaceProxied(DecoratingProxy.class));
 		int nonUserIfcCount = 0;
 		if (addSpringProxy) {

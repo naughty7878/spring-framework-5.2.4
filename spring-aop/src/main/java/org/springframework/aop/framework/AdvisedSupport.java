@@ -75,6 +75,8 @@ public class AdvisedSupport extends ProxyConfig implements Advised {
 	TargetSource targetSource = EMPTY_TARGET_SOURCE;
 
 	/** Whether the Advisors are already filtered for the specific target class. */
+	// 是否已针对特定目标类筛选顾问
+	// 前期过滤
 	private boolean preFiltered = false;
 
 	/** The AdvisorChainFactory to use. */
@@ -96,6 +98,7 @@ public class AdvisedSupport extends ProxyConfig implements Advised {
 	private List<Advisor> advisors = new ArrayList<>();
 
 	/**
+	 *
 	 * Array updated on changes to the advisors list, which is easier
 	 * to manipulate internally.
 	 */
@@ -387,6 +390,7 @@ public class AdvisedSupport extends ProxyConfig implements Advised {
 	@Override
 	public void addAdvice(Advice advice) throws AopConfigException {
 		int pos = this.advisors.size();
+		// 添加一个 DefaultPointcutAdvisor 到 Advisor 集合
 		addAdvice(pos, advice);
 	}
 
@@ -406,6 +410,7 @@ public class AdvisedSupport extends ProxyConfig implements Advised {
 			throw new AopConfigException("DynamicIntroductionAdvice may only be added as part of IntroductionAdvisor");
 		}
 		else {
+			// 根据通知，创建一个默认的切入点通知器
 			addAdvisor(pos, new DefaultPointcutAdvisor(advice));
 		}
 	}
@@ -476,11 +481,15 @@ public class AdvisedSupport extends ProxyConfig implements Advised {
 	 * @return a List of MethodInterceptors (may also include InterceptorAndDynamicMethodMatchers)
 	 */
 	public List<Object> getInterceptorsAndDynamicInterceptionAdvice(Method method, @Nullable Class<?> targetClass) {
+		// 创建一个方法缓存key
 		MethodCacheKey cacheKey = new MethodCacheKey(method);
+		// 从方法缓存中获取
 		List<Object> cached = this.methodCache.get(cacheKey);
 		if (cached == null) {
+			// 调用代理工厂的通知器链路工厂方法
 			cached = this.advisorChainFactory.getInterceptorsAndDynamicInterceptionAdvice(
 					this, method, targetClass);
+			// 放入缓存中
 			this.methodCache.put(cacheKey, cached);
 		}
 		return cached;

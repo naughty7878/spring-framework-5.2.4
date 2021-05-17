@@ -47,14 +47,17 @@ import org.springframework.util.CollectionUtils;
 public class ModelAndView {
 
 	/** View instance or view name String. */
+	// 视图名
 	@Nullable
 	private Object view;
 
 	/** Model Map. */
+	// 模型Map集合
 	@Nullable
 	private ModelMap model;
 
 	/** Optional HTTP status for the response. */
+	// 状态
 	@Nullable
 	private HttpStatus status;
 
