@@ -44,6 +44,7 @@ import org.springframework.lang.Nullable;
  * @author Sam Brannen
  * @since May 2, 2001
  */
+// 秒表对象
 public class StopWatch {
 
 	/**
@@ -58,9 +59,11 @@ public class StopWatch {
 	private final List<TaskInfo> taskList = new LinkedList<>();
 
 	/** Start time of the current task. */
+	// 开始时间
 	private long startTimeNanos;
 
 	/** Name of the current task. */
+	// 当前任务名
 	@Nullable
 	private String currentTaskName;
 
@@ -138,7 +141,9 @@ public class StopWatch {
 		if (this.currentTaskName != null) {
 			throw new IllegalStateException("Can't start StopWatch: it's already running");
 		}
+		// 任务名
 		this.currentTaskName = taskName;
+		// 开始时间
 		this.startTimeNanos = System.nanoTime();
 	}
 

@@ -1057,6 +1057,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	public void registerShutdownHook() {
 		if (this.shutdownHook == null) {
 			// No shutdown hook registered yet.
+			// 创建一个关闭勾子线程
 			this.shutdownHook = new Thread(SHUTDOWN_HOOK_THREAD_NAME) {
 				@Override
 				public void run() {
@@ -1065,6 +1066,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 					}
 				}
 			};
+			// 添加到运行时对象的关闭勾子集合中
 			Runtime.getRuntime().addShutdownHook(this.shutdownHook);
 		}
 	}

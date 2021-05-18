@@ -118,32 +118,53 @@ public final class SpringFactoriesLoader {
 	 * @see #loadFactories
 	 */
 	public static List<String> loadFactoryNames(Class<?> factoryType, @Nullable ClassLoader classLoader) {
+		// 获取工厂类型名称
 		String factoryTypeName = factoryType.getName();
+		// 加载Spring工厂集合，从集合中获取对应工厂类型的工厂实例名
 		return loadSpringFactories(classLoader).getOrDefault(factoryTypeName, Collections.emptyList());
 	}
-
+	// 加载Spring工厂
 	private static Map<String, List<String>> loadSpringFactories(@Nullable ClassLoader classLoader) {
+		// 从工厂加载器的缓存中获取，该类加载器对应的Spring工厂
 		MultiValueMap<String, String> result = cache.get(classLoader);
 		if (result != null) {
 			return result;
 		}
 
 		try {
+			// 得到urls集合
+			// spring-boot/target/classes/META-INF/spring.factories
+			// spring-beans-5.2.4.RELEASE-MY.jar!/META-INF/spring.factories
+			// spring-boot-autoconfigure/target/classes/META-INF/spring.factories
 			Enumeration<URL> urls = (classLoader != null ?
+					// 类加载器从对应的资源工厂位置加载资源
 					classLoader.getResources(FACTORIES_RESOURCE_LOCATION) :
 					ClassLoader.getSystemResources(FACTORIES_RESOURCE_LOCATION));
+			// 为空，创建一个集合
 			result = new LinkedMultiValueMap<>();
+			// urls集合有元素
 			while (urls.hasMoreElements()) {
+				// 获取对应的url
 				URL url = urls.nextElement();
+				// 创建url资源
 				UrlResource resource = new UrlResource(url);
+				// 加载资源，成属性对象
 				Properties properties = PropertiesLoaderUtils.loadProperties(resource);
+				// 遍历属性对象
 				for (Map.Entry<?, ?> entry : properties.entrySet()) {
+					// 获取工厂类型名
+					// factoryTypeName
+					// 	  = org.springframework.context.ApplicationContextInitializer
+					// 或 = org.springframework.context.ApplicationListener
 					String factoryTypeName = ((String) entry.getKey()).trim();
+					// 获取类型名对应的值，并遍历值
 					for (String factoryImplementationName : StringUtils.commaDelimitedListToStringArray((String) entry.getValue())) {
+						// 工厂类型名称-工厂实现名称，添加到集合
 						result.add(factoryTypeName, factoryImplementationName.trim());
 					}
 				}
 			}
+			// 添加到缓存中
 			cache.put(classLoader, result);
 			return result;
 		}
