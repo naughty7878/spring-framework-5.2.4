@@ -915,6 +915,7 @@ class ConfigurationClassParser {
 			this.deferredImportSelectors = null;
 			try {
 				if (deferredImports != null) {
+					// 创建延迟导入选择器组
 					DeferredImportSelectorGroupingHandler handler = new DeferredImportSelectorGroupingHandler();
 					// 排序
 					deferredImports.sort(DEFERRED_IMPORT_COMPARATOR);
@@ -937,10 +938,14 @@ class ConfigurationClassParser {
 		private final Map<AnnotationMetadata, ConfigurationClass> configurationClasses = new HashMap<>();
 		// 注册
 		public void register(DeferredImportSelectorHolder deferredImport) {
+			// 获取延迟选择导入组
 			Class<? extends Group> group = deferredImport.getImportSelector().getImportGroup();
+			// 获取选择器组
 			DeferredImportSelectorGrouping grouping = this.groupings.computeIfAbsent(
 					(group != null ? group : deferredImport),
+					// 创建延迟导入选择器组
 					key -> new DeferredImportSelectorGrouping(createGroup(group)));
+			// 将延迟导入对象添加到组
 			grouping.add(deferredImport);
 			this.configurationClasses.put(deferredImport.getConfigurationClass().getMetadata(),
 					deferredImport.getConfigurationClass());
@@ -1026,6 +1031,7 @@ class ConfigurationClassParser {
 		public Iterable<Group.Entry> getImports() {
 			for (DeferredImportSelectorHolder deferredImport : this.deferredImports) {
 				this.group.process(deferredImport.getConfigurationClass().getMetadata(),
+						// 延迟导入类，调用getImportSelector方法
 						deferredImport.getImportSelector());
 			}
 			return this.group.selectImports();

@@ -118,16 +118,20 @@ class ComponentScanAnnotationParser {
 
 		// 包路径
 		Set<String> basePackages = new LinkedHashSet<>();
+		// 获取指定包路径
 		String[] basePackagesArray = componentScan.getStringArray("basePackages");
 		for (String pkg : basePackagesArray) {
 			String[] tokenized = StringUtils.tokenizeToStringArray(this.environment.resolvePlaceholders(pkg),
 					ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
 			Collections.addAll(basePackages, tokenized);
 		}
+		// 获取指定类包路径
 		for (Class<?> clazz : componentScan.getClassArray("basePackageClasses")) {
 			basePackages.add(ClassUtils.getPackageName(clazz));
 		}
+		// 如果前面2着都为空的情况下，获取当前声明类Class的包名称
 		if (basePackages.isEmpty()) {
+			// 即@componentScan注解类的包名称
 			basePackages.add(ClassUtils.getPackageName(declaringClass));
 		}
 
