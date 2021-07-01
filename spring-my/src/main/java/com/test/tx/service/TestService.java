@@ -18,7 +18,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class TestService {
 
 	// 事务模版
-	@Autowired
+//	@Autowired
 	private TransactionTemplate transactionTemplate;
 
 	@Autowired
